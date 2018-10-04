@@ -1,6 +1,3 @@
-
-@printf("Testing phase congruency functions...\n")
-
 #=
 
 Hard to test these functions other than visually.  This script simply
@@ -8,7 +5,9 @@ runs then all to make sure that they at least run
 
 =#
 
-using ImagePhaseCongruency, TestImages, ImageView
+using Test, ImagePhaseCongruency, TestImages, ImageView, Printf
+
+@printf("Testing phase congruency functions...\n")
 
 img = testimage("lena_gray")
 img = Float64.(img)

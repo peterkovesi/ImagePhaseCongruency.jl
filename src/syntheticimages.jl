@@ -307,7 +307,7 @@ function noiseonf(sze::Tuple{Integer, Integer}, p::Real)
     # Construct the amplitude spectrum filter
     # Add 1 to avoid divide by 0 problems later
     radius = filtergrid(rows,cols) * max(rows,cols) + 1
-    filter = 1./(radius.^p)
+    filter = 1 ./ (radius.^p)
     
     # Reconstruct fft of noise image, but now with the specified amplitude
     # spectrum
@@ -426,7 +426,7 @@ function swapphase(img1::Array{T,2}, img2::Array{T,2}) where T <: Real
     # Take FFTs, get magnitude and phase
     IMG1 = fft(img1);         IMG2 = fft(img2)
     mag1 = abs.(IMG1);        mag2 = abs.(IMG2)
-    phase1 = IMG1./mag1;      phase2 = IMG2./mag2
+    phase1 = IMG1 ./ mag1;    phase2 = IMG2./mag2
     
     # Now swap amplitude and phase between images.
     NEWIMG1 = mag2.*phase1;   NEWIMG2 = mag1.*phase2

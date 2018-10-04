@@ -391,7 +391,6 @@ sigmaOnf = 0.55 gives a filter bandwidth of about 2 octaves.
 
 ```
 """
-
 function loggabor(f::Real, fo::Real, sigmaOnf::Real)
     if f < eps()
         return 0.0
@@ -403,7 +402,7 @@ end
 #-------------------------------------------------------------
 
 function gridangles(freq::Array{T1,2}, 
-                    fx::Array{T2,2}, fy::Array{T3,2}) where T1 <: Real, T2 <: Real, T3 <: Real
+                    fx::Array{T2,2}, fy::Array{T3,2}) where {T1 <: Real, T2 <: Real, T3 <: Real}
     
     freq[1,1] = 1         # Avoid divide by 0
     sintheta = fx./freq   # sine and cosine of filter grid angles
@@ -431,7 +430,7 @@ Arguments:
 See also: gaussianangularfilter, filtergrids
 """
 function cosineangularfilter(angl::Real, wavelen::Real, 
-                             sintheta::Array{T1,2}, costheta::Array{T2,2}) where T1 <: Real, T2 <: Real
+                             sintheta::Array{T1,2}, costheta::Array{T2,2}) where {T1 <: Real, T2 <: Real}
 
     sinangl = sin(angl); cosangl = cos(angl)
     fltr = zeros(size(sintheta))
@@ -477,7 +476,7 @@ Arguments:
 See also: cosineangularfilter, gridangles, filtergrids
 """
 function gaussianangularfilter(angl::Real, thetaSigma::Real, 
-                               sintheta::Array{T1,2}, costheta::Array{T2,2}) where T1 <: Real, T2 <: Real
+                               sintheta::Array{T1,2}, costheta::Array{T2,2}) where {T1 <: Real, T2 <: Real}
 
     sinangl = sin(angl); cosangl = cos(angl)
     fltr = zeros(size(sintheta))
