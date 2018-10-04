@@ -33,7 +33,7 @@ August 2015   Original conversion from MATLAB to Julia
 November 2017  Julia 0.6
 October  2018  Julia 0.7/1.0
 ---------------------------------------------------------------------=#
-using Images
+using Images, FFTW
 
 export phasecongmono, phasesymmono, ppdrc, highpassmonogeic
 export gaborconvolve, monofilt
@@ -96,7 +96,7 @@ View the output images in the form of an Interactive Image using linimix()
 
 See also: highpassmonogenic, geoseries, linimix, histruncate
 """
-function ppdrc(img::Array{T1,2}, wavelength::Vector{T2}; clip::Real=0.01, n::Integer=2) where T1 <: Real, T2 <: Real
+function ppdrc(img::Array{T1,2}, wavelength::Vector{T2}; clip::Real=0.01, n::Integer=2) where {T1 <: Real, T2 <: Real}
     #=
     Reference:
     Peter Kovesi, "Phase Preserving Tone Mapping of Non-Photographic High Dynamic
@@ -178,7 +178,7 @@ be nscales x 1 arrays of output images.  Where nscales = length(maxwavelength).
 
 See also: ppdrc, monofilt
 """
-function highpassmonogenic(img::Array{T1,2}, maxwavelength::Vector{T2}, n::Integer) where T1 <: Real, T2 <: Real
+function highpassmonogenic(img::Array{T1,2}, maxwavelength::Vector{T2}, n::Integer) where {T1 <: Real, T2 <: Real}
 
     @assert minimum(maxwavelength) >= 2  "Minimum wavelength is 2 pixels"
     nscales = length(maxwavelength)
@@ -1661,7 +1661,7 @@ not that critical.  The main parameter that you may wish to play with
 is `k`, the number of standard deviations of noise to reject.
 
 """
-function ppdenoise(img::Array{T,2}; nscale::Integer=5, norient::Integer=6,
+function ppdenoise(img::Array{T1,2}; nscale::Integer=5, norient::Integer=6,
                    mult::Real=2.5, minwavelength::Real = 2, sigmaonf::Real = 0.55,
                    dthetaonsigma::Real = 1.0, k::Real=3, softness::Real=1.0) where T1 <: Real
     #=
