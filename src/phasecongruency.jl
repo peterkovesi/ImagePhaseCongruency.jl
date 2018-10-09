@@ -33,7 +33,7 @@ August 2015   Original conversion from MATLAB to Julia
 November 2017  Julia 0.6
 October  2018  Julia 0.7/1.0
 ---------------------------------------------------------------------=#
-using Images, FFTW
+using Images, FFTW, Statistics
 
 export phasecongmono, phasesymmono, ppdrc, highpassmonogeic  
 export gaborconvolve, monofilt 
@@ -96,7 +96,7 @@ View the output images in the form of an Interactive Image using linimix()
 
 See also: highpassmonogenic, geoseries, linimix, histruncate
 """
-function ppdrc(img::Array{T1,2}, wavelength::Vector{T2}; clip::Real=0.01, n::Integer=2) where {T1 <: Real, T2 <: Real}
+function ppdrc(img::AbstractArray{T1,2}, wavelength::Vector{T2}; clip::Real=0.01, n::Integer=2) where {T1 <: Real, T2 <: Real}
     #=
     Reference:
     Peter Kovesi, "Phase Preserving Tone Mapping of Non-Photographic High Dynamic
@@ -118,7 +118,7 @@ function ppdrc(img::Array{T1,2}, wavelength::Vector{T2}; clip::Real=0.01, n::Int
     (ph, _, E) = highpassmonogenic(img, wavelength, n)
 
     # Construct each dynamic range reduced image 
-    dimg = Vector{Array{Float64,2}}(nscale)
+    dimg = Vector{Array{Float64,2}}(undef, nscale)
 
     if nscale == 1   # Single image, highpassmonogenic() will have returned single 
                      # images, hence this separate case 
@@ -149,7 +149,7 @@ function ppdrc(img::Array{T1,2}, wavelength::Vector{T2}; clip::Real=0.01, n::Int
 end
 
 # Case when wavelength is a single value
-function ppdrc(img::Array{<:Real,2}, wavelength::Real; clip::Real=0.01, n::Integer=2) 
+function ppdrc(img::AbstractArray{<:Real,2}, wavelength::Real; clip::Real=0.01, n::Integer=2) 
     return ppdrc(img, [wavelength]; clip=clip, n=n)
 end
 
@@ -178,7 +178,7 @@ be nscales x 1 arrays of output images.  Where nscales = length(maxwavelength).
 
 See also: ppdrc, monofilt
 """
-function highpassmonogenic(img::Array{T1,2}, maxwavelength::Vector{T2}, n::Integer) where {T1 <: Real, T2 <: Real}
+function highpassmonogenic(img::AbstractArray{T1,2}, maxwavelength::Vector{T2}, n::Integer) where {T1 <: Real, T2 <: Real}
 
     @assert minimum(maxwavelength) >= 2  "Minimum wavelength is 2 pixels"
     nscales = length(maxwavelength)
@@ -187,9 +187,9 @@ function highpassmonogenic(img::Array{T1,2}, maxwavelength::Vector{T2}, n::Integ
     # Generate monogenic and filter grids
     (H1, H2, freq) = monogenicfilters(size(img))
 
-    phase = Vector{Array{Float64,2}}(nscales)
-    orient = Array{Array{Float64,2}}(nscales)
-    E = Vector{Array{Float64,2}}(nscales)
+    phase = Vector{Array{Float64,2}}(undef, nscales)
+    orient = Array{Array{Float64,2}}(undef, nscales)
+    E = Vector{Array{Float64,2}}(undef, nscales)
     f = zeros(size(img))
     h1f = zeros(size(img))
     h2f = zeros(size(img))
@@ -197,14 +197,14 @@ function highpassmonogenic(img::Array{T1,2}, maxwavelength::Vector{T2}, n::Integ
     
     for s = 1:nscales
         # High pass Butterworth filter
-        H .=  1.0 .- 1.0 ./ (1.0 + (freq .* maxwavelength[s]).^(2*n)) 
+        H .=  1.0 .- 1.0 ./ (1.0 .+ (freq .* maxwavelength[s]).^(2*n)) 
         
         f .= real.(ifft(H.*IMG))
         h1f .= real.(ifft(H.*H1.*IMG))
         h2f .= real.(ifft(H.*H2.*IMG))
         
         phase[s] = atan.(f./sqrt.(h1f.^2 .+ h2f.^2 .+ eps()))
-        orient[s] = atan2.(h2f, h1f)
+        orient[s] = atan.(h2f, h1f)
         E[s] = sqrt.(f.^2 .+ h1f.^2 .+ h2f.^2)    
     end
     
@@ -217,7 +217,7 @@ function highpassmonogenic(img::Array{T1,2}, maxwavelength::Vector{T2}, n::Integ
 end
 
 # Version when maxwavelength is a scalar
-function highpassmonogenic(img::Array{<:Real,2}, maxwavelength::Real, n::Integer) 
+function highpassmonogenic(img::AbstractArray{T,2}, maxwavelength::Real, n::Integer) where T <: Real
     return highpassmonogenic(img, [maxwavelength], n) 
 end
 
@@ -316,7 +316,7 @@ smaller.
 See also:  phasecong, phasecong3, phasesymmono, gaborconvolve,
 plotgaborfilters, filtergrid
 """
-function phasecongmono(img::Array{T1,2}; nscale::Integer = 4, minwavelength::Real = 3, 
+function phasecongmono(img::AbstractArray{T1,2}; nscale::Integer = 4, minwavelength::Real = 3, 
                        mult::Real = 2.1, sigmaonf::Real = 0.55, k::Real = 3.0,
                        noisemethod::Real = -1, cutoff::Real = 0.5, g::Real = 10.0,
                        deviationgain::Real = 1.5) where T1 <: Real
@@ -352,8 +352,8 @@ References:
     sumh2  = zeros(rows,cols)                                          
     maxAn =  zeros(rows,cols)         # Need maxAn in main scope of function
 
-    IMGF = zeros(Complex64, rows, cols)  # Buffers
-    h = zeros(Complex64, rows, cols)
+    IMGF = zeros(ComplexF64, rows, cols)  # Buffers
+    h = zeros(ComplexF64, rows, cols)
     f = zeros(rows, cols)
     h1 = zeros(rows, cols)
     h2 = zeros(rows, cols)
@@ -481,7 +481,7 @@ References:
     @. or = atan(sumh2/sumh1)   
     
     # Feature type - a phase angle -pi/2 to pi/2.
-    @. ft = atan2(sumf, sqrt(sumh1^2 + sumh2^2))    
+    @. ft = atan(sumf, sqrt(sumh1^2 + sumh2^2))    
     
     # Overall energy
     @. energy =  sqrt(sumf^2 + sumh1^2 + sumh2^2)  
@@ -622,7 +622,7 @@ sigmaonf       .55   mult 3       (filter bandwidth ~2 octaves)
 ```
 See Also:  phasesym, phasecongmono
 """
-function phasesymmono(img::Array{T1,2}; nscale::Integer = 5, minwavelength::Real = 3, 
+function phasesymmono(img::AbstractArray{T1,2}; nscale::Integer = 5, minwavelength::Real = 3, 
                        mult::Real = 2.1, sigmaonf::Real = 0.55, k::Real = 2.0,
                        polarity::Integer = 0, noisemethod::Real = -1) where T1 <: Real
 
@@ -654,8 +654,8 @@ References:
                                       # symmetry values (energy).
     sumAn  = zeros(rows,cols)         # Matrix for accumulating filter response
                                       # amplitude values.
-    IMGF = zeros(Complex64, rows, cols)
-    h = zeros(Complex64, rows, cols)
+    IMGF = zeros(ComplexF64, rows, cols)
+    h = zeros(ComplexF64, rows, cols)
     f = zeros(rows, cols)
 
     # Generate filter grids in the frequency domain
@@ -813,7 +813,7 @@ to be useful on some occasions.
 
 See also: gaborconvolve
 """
-function  monofilt(img::Array{T1,2}, nscale::Integer, minWaveLength::Real, mult::Real, 
+function  monofilt(img::AbstractArray{T1,2}, nscale::Integer, minWaveLength::Real, mult::Real, 
                    sigmaOnf::Real, orientWrap::Bool = false) where T1 <: Real
 
     #=
@@ -838,15 +838,15 @@ function  monofilt(img::Array{T1,2}, nscale::Integer, minWaveLength::Real, mult:
     # which are point-wise multiplied by H1 and H2 to produce different
     # bandpass versions of H1 and H2
 
-    psi = Array{Array{Float64,2}}(nscale)
-    theta = Array{Array{Float64,2}}(nscale)
-    A = Array{Array{Float64,2}}(nscale)
-    f = Array{Array{Float64,2}}(nscale)
-    h1f = Array{Array{Float64,2}}(nscale)
-    h2f = Array{Array{Float64,2}}(nscale)
+    psi = Array{Array{Float64,2}}(undef, nscale)
+    theta = Array{Array{Float64,2}}(undef, nscale)
+    A = Array{Array{Float64,2}}(undef, nscale)
+    f = Array{Array{Float64,2}}(undef, nscale)
+    h1f = Array{Array{Float64,2}}(undef, nscale)
+    h2f = Array{Array{Float64,2}}(undef, nscale)
 
-    H1s = zeros(Complex64, rows, cols)
-    H2s = zeros(Complex64, rows, cols)
+    H1s = zeros(ComplexF64, rows, cols)
+    H2s = zeros(ComplexF64, rows, cols)
     logGabor = zeros(rows, cols)
 
     for s = 1:nscale
@@ -865,11 +865,11 @@ function  monofilt(img::Array{T1,2}, nscale::Integer, minWaveLength::Real, mult:
 	h2f[s] = real.(ifft(IMG.*H2s))
 	
 	A[s] = sqrt.(f[s].^2 .+ h1f[s].^2 .+ h2f[s].^2)  # Magnitude of Energy.
-	theta[s] = atan2.(h2f[s], h1f[s])              # Orientation.
+	theta[s] = atan.(h2f[s], h1f[s])              # Orientation.
 	
 	# Here phase is measured relative to the h1f-h2f plane as an
 	# 'elevation' angle that ranges over +- pi/2
-	psi[s] = atan2.(f[s], sqrt.(h1f[s].^2 .+ h2f[s].^2))
+	psi[s] = atan.(f[s], sqrt.(h1f[s].^2 .+ h2f[s].^2))
 	
 	if orientWrap # Wrap orientation values back into the range 0-pi
             theta[s][theta[s] .< 0] += pi
@@ -948,7 +948,7 @@ If there are 'gaps' radiating outwards then one needs to reduce dthetaOnSigma
 (increasing angular bandwidth of the filters)
 
 """
-function gaborconvolve(img::Array{T1,2}, nscale::Integer, norient::Integer, minWaveLength::Real, 
+function gaborconvolve(img::AbstractArray{T1,2}, nscale::Integer, norient::Integer, minWaveLength::Real, 
                        mult::Real, sigmaOnf::Real, dThetaOnSigma::Real, Lnorm::Integer = 0) where T1 <:Real
     #=
     For details of log-Gabor filters see: 
@@ -963,9 +963,9 @@ function gaborconvolve(img::Array{T1,2}, nscale::Integer, norient::Integer, minW
 
     (rows, cols) = size(img)					
     IMG = fft(img)  
-    EO = Array{Array{Complex64,2}}(nscale, norient)
-    BP = Array{Array{Float64,2}}(nscale)
-    logGabor = Array{Array{Float64,2}}(nscale)
+    EO = Array{Array{ComplexF64,2}}(undef, nscale, norient)
+    BP = Array{Array{Float64,2}}(undef, nscale)
+    logGabor = Array{Array{Float64,2}}(undef, nscale)
 
     filter = zeros(rows, cols)
     angfilter = zeros(rows, cols)
@@ -1129,7 +1129,7 @@ sigmaonf       .55   mult 3       (filter bandwidth ~2 octaves)
 ```
 See Also:  phasesym, gaborconvolve, plotgaborfilters
 """
-function phasecong3(img::Array{T1,2}; nscale::Integer = 4, norient::Integer = 6, 
+function phasecong3(img::AbstractArray{T1,2}; nscale::Integer = 4, norient::Integer = 6, 
                     minwavelength::Real = 3, mult::Real = 2.1, sigmaonf::Real = 0.55, 
                     k::Real = 2, cutoff::Real = 0.5, g::Real = 10, 
                     noisemethod::Real = -1) where T1 <: Real
@@ -1152,10 +1152,10 @@ function phasecong3(img::Array{T1,2}; nscale::Integer = 4, norient::Integer = 6,
     IMG = fft(img)
 
     # A massive set of buffer matrices...
-    logGabor = Array{Array{Float64,2}}(nscale)   
+    logGabor = Array{Array{Float64,2}}(undef, nscale)   
     filter = zeros(rows, cols)
 
-    EO = Array{Array{Complex64,2}}(nscale, norient)      # Array of convolution results.  
+    EO = Array{Array{ComplexF64,2}}(undef, nscale, norient)  # Array of convolution results.  
     EnergyV = zeros(rows,cols,3)     # Total energy vector, used for
                                      # feature orientation and type
                                      # calculation
@@ -1364,8 +1364,8 @@ function phasecong3(img::Array{T1,2}; nscale::Integer = 4, norient::Integer = 6,
     @views or = atan.(EnergyV[:,:,3]./EnergyV[:,:,2])
     
     OddV = sqrt.(EnergyV[:,:,2].^2 + EnergyV[:,:,3].^2)
-    @views featType = atan2.(EnergyV[:,:,1], OddV)  # Feature phase  pi/2 <-> white line,
-                                                    # 0 <-> step, -pi/2 <-> black line
+    @views featType = atan.(EnergyV[:,:,1], OddV)  # Feature phase  pi/2 <-> white line,
+                                                   # 0 <-> step, -pi/2 <-> black line
 
     return M, m, or, featType, EO, T
 end
@@ -1444,7 +1444,7 @@ sigmaonf       .55   mult 3       (filter bandwidth ~2 octaves)
 ```
 See Also:  phasesymmono, phasecong3
 """
-function  phasesym(img::Array{T1,2}; nscale::Integer = 5, norient::Integer = 6, 
+function  phasesym(img::AbstractArray{T1,2}; nscale::Integer = 5, norient::Integer = 6, 
                    minwavelength::Real = 3, mult::Real = 2.1, sigmaonf::Real = 0.55, 
                    k::Real = 2.0, polarity::Integer = 0, noisemethod::Real = -1) where T1 <: Real
     #=
@@ -1462,7 +1462,7 @@ function  phasesym(img::Array{T1,2}; nscale::Integer = 5, norient::Integer = 6,
     (rows,cols) = size(img)
     IMG = fft(img)             
 
-    logGabor = Array{Array{Float64,2}}(nscale) 
+    logGabor = Array{Array{Float64,2}}(undef, nscale) 
     filter = zeros(rows,cols)
     totalEnergy = zeros(rows,cols)      # Matrix for accumulating weighted phase 
                                         # congruency values (energy).
@@ -1474,7 +1474,7 @@ function  phasesym(img::Array{T1,2}; nscale::Integer = 5, norient::Integer = 6,
     sumAn_ThisOrient  = zeros(rows,cols)
     Energy_ThisOrient = zeros(rows,cols)
     An = zeros(rows,cols)
-    EO = zeros(Complex64, rows,cols)
+    EO = zeros(ComplexF64, rows,cols)
 
     tau = 0.0
     T = 0.0  # Need in main scope
@@ -1619,7 +1619,7 @@ function  phasesym(img::Array{T1,2}; nscale::Integer = 5, norient::Integer = 6,
     
     # Normalize totalEnergy by the totalSumAn to obtain phase symmetry
     # totalEnergy is floored at 0 to eliminate -ve values
-    phaseSym = max.(totalEnergy, 0) ./ (totalSumAn + epsilon)
+    phaseSym = max.(totalEnergy, 0) ./ (totalSumAn .+ epsilon)
     
     # Convert orientation values to radians
     orientation .*= pi/norient
@@ -1661,7 +1661,7 @@ not that critical.  The main parameter that you may wish to play with
 is `k`, the number of standard deviations of noise to reject.
 
 """
-function ppdenoise(img::Array{T1,2}; nscale::Integer=5, norient::Integer=6,
+function ppdenoise(img::AbstractArray{T1,2}; nscale::Integer=5, norient::Integer=6,
                    mult::Real=2.5, minwavelength::Real = 2, sigmaonf::Real = 0.55, 
                    dthetaonsigma::Real = 1.0, k::Real=3, softness::Real=1.0) where T1 <: Real
     #=
@@ -1686,10 +1686,10 @@ function ppdenoise(img::Array{T1,2}; nscale::Integer=5, norient::Integer=6,
     (freq, fx, fy) = filtergrids(rows,cols)
     (sintheta, costheta) = gridangles(freq, fx, fy)
 
-    totalEnergy = zeros(Complex64,rows,cols)  # response at each orientation.
+    totalEnergy = zeros(ComplexF64,rows,cols)  # response at each orientation.
     filter = zeros(rows,cols)
     angfilter = zeros(rows,cols)
-    EO = zeros(Complex64, rows,cols)
+    EO = zeros(ComplexF64, rows,cols)
     aEO = zeros(rows,cols)
 
     RayMean = 0.0; RayVar = 0.0;  # make main scope

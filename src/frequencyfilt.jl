@@ -32,7 +32,8 @@ PK August 2015   Original porting from MATLAB to Julia
    October 2018  Julia 0.7/1.0
 ---------------------------------------------------------------------=#
 
-export filtergrid, filtergrids
+export filtergrid, filtergrids, gridangles
+export cosineangularfilter, gaussianangularfilter
 export lowpassfilter, highpassfilter, bandpassfilter, highboostfilter
 export loggabor, monogenicfilters, packedmonogenicfilters
 export perfft2
@@ -241,7 +242,7 @@ end
 
 # Tuple version
 function packedmonogenicfilters(sze::Tuple{Integer,Integer})   
-    return monogenicfilter(sze[1], sze[2])
+    return monogenicfilters(sze[1], sze[2])
 end
 
 #--------------------------------------------------------------------
@@ -339,9 +340,9 @@ function highboostfilter(sze::Tuple{Integer, Integer}, cutoff::Real, n::Integer,
     end
     
     if boost >= 1     # high-boost filter
-	f = (1.0-1.0/boost)*highpassfilter(sze, cutoff, n) + 1.0/boost
+	f = (1.0 - 1.0/boost)*highpassfilter(sze, cutoff, n) .+ 1.0/boost
     else              # low-boost filter
-	f = (1.0-boost)*lowpassfilter(sze, cutoff, n) + boost
+	f = (1.0 - boost)*lowpassfilter(sze, cutoff, n) .+ boost
     end
 
     return f
@@ -370,7 +371,7 @@ function highpassfilter(sze::Tuple{Integer, Integer}, cutoff::Real, n::Integer)
 	error("cutoff frequency must be between 0 and 0.5")
     end
 
-    return 1.0 - lowpassfilter(sze, cutoff, n)
+    return 1.0 .- lowpassfilter(sze, cutoff, n)
 end    
 #--------------------------------------------------------------------
 """
@@ -414,7 +415,7 @@ end
 
 #--------------------------------------------------------------------
 """
-cosineangularfilter 
+cosineangularfilter
 
 Generate orientation selective filter in the frequency domain using an
 angular cosine windowing function
@@ -443,7 +444,7 @@ function cosineangularfilter(angl::Real, wavelen::Real,
     for n in eachindex(sintheta)
         ds = sintheta[n] * cosangl - costheta[n] * sinangl  # Difference in sine.
         dc = costheta[n] * cosangl + sintheta[n] * sinangl  # Difference in cosine.
-        dtheta = abs(atan2(ds, dc))                   # Absolute angular distance.
+        dtheta = abs(atan(ds, dc))                   # Absolute angular distance.
             
         # Scale theta so that cosine spread function has the right
         # wavelength and clamp to pi.  dtheta has a wavelength of
@@ -489,7 +490,7 @@ function gaussianangularfilter(angl::Real, thetaSigma::Real,
     for n in eachindex(sintheta)
         ds = sintheta[n] * cosangl - costheta[n] * sinangl  # Difference in sine.
         dc = costheta[n] * cosangl + sintheta[n] * sinangl  # Difference in cosine.
-        dtheta = atan2(ds, dc)                              # Angular distance.
+        dtheta = atan(ds, dc)                               # Angular distance.
             
         fltr[n] = exp((-dtheta.^2) / (2 * thetaSigma^2))  
     end
@@ -692,22 +693,25 @@ function perfft2(img::Array{T,2}) where T <: Real
     # Generate grid upon which to compute the filter for the boundary image in
     # the frequency domain.  Note that cos() is cyclic hence the grid values can
     # range from 0 .. 2*pi rather than 0 .. pi and then pi .. 0
-    (cx, cy) = meshgrid(2*pi*[0:cols-1]/cols, 2*pi*[0:rows-1]/rows)    
-    
-# ** cx and cy could be generators
+#    (cx, cy) = meshgrid(2*pi*[0:cols-1]/cols, 2*pi*[0:rows-1]/rows)    
+#    S = fft(s)./(2*(2 .- cos.(cx) .- cos.(cy)))    
 
+    # ** construct S via a comprehension
     # Generate FFT of smooth component
-    S = fft(s)./(2*(2 - cos.(cx) - cos.(cy)))
+    cxrange = 2*pi*(0:cols-1)/cols
+    cyrange = 2*pi*(0:rows-1)/rows
+    denom = [2*(2 - cos(cx) - cos(cy)) for cx in cxrange, cy in cyrange]
+    S = fft(s)./denom
     
     # The [1,1] element of the filter will be 0 so S[1,1] may be Inf or NaN
-    S[1,1] = 0.0        # Enforce 0 mean 
+    S[1,1] = 0.0         # Enforce 0 mean 
 
-    P = fft(img) - S    # FFT of periodic component
+    P = fft(img) .- S    # FFT of periodic component
 
 # ** ? Perhaps have a separate version or a flag to request the
 # ** spatial versions of p and s
     s = real(ifft(S)) 
-    p = im - s         
+    p = img .- s         
  
     return P, S, p, s
 end   

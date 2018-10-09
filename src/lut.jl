@@ -73,7 +73,7 @@ See also: applylut!, makelut
 """
 function applylut(img::AbstractArray{T,2}, lut::BitArray{1}) where T <: Integer
 
-    bw = BitArray(size(img))
+    bw = BitArray(undef, size(img))
     applylut!(bw, img, lut)
     return bw
 end
@@ -217,9 +217,8 @@ Argument:
                - A binary image marking lines/edges in an image.  It is
                  assumed that this is a thinned or skeleton image 
 Returns:   
-   ind :: Vector{Int64}
-                - Vector of linear indices into `edgeimg` where line 
-                  endings occur.
+      ind :: An array of CartesianIndices into edgeimg marking the locations 
+             of line endings.
 ```
 Note: The definition of an 'ending' is that the centre pixel must be
 set and the number of transitions/crossings between 0 and 1 as one
@@ -256,7 +255,7 @@ function findends(b::AbstractArray{T,2}) where T <: Integer
 
     lut = makelut(ending)
     ends = applylut(b, lut)
-    return find(ends)
+    return findall(ends)
 end
 
 #---------------------------------------------------------------
@@ -266,13 +265,12 @@ findjunctions - find junctions in a line/edge image
 Usage: ind = findjunctions(edgeimg)
  
 Argument:  
-  edgeimg :: AbstractArray{<:Integer, 2}
-               - A binary image marking lines/edges in an image.  It is
-                 assumed that this is a thinned or skeleton image 
+  edgeimg :: AbstractArray{T, 2} where T <: Integer
+              - A binary image marking lines/edges in an image.  It is
+                assumed that this is a thinned or skeleton image 
 Returns:   
-      ind :: Vector{Int64}
-                - Vector of linear indices into edgeimg where line
-                  junctions occur.
+      ind :: An array of CartesianIndices into edgeimg marking the locations
+             of line junctions.
 ```
 See also: findends, findisolatedpixels, applylut, edgelink
 """
@@ -293,13 +291,13 @@ function findjunctions(b::AbstractArray{T,2}) where T <: Integer
         # Indices of pixels around the perimeter
         local a = x[ [1, 2, 3, 6, 9, 8, 7, 4] ]
         local b = x[ [2, 3, 6, 9, 8, 7, 4, 1] ]
-        crossings = countnz(abs.(a-b))
+        crossings = count(!iszero, abs.(a-b))
         return x[5] && (crossings == 6 || crossings == 8)
     end
 
     lut = makelut(junction)
     junctions = applylut(b, lut)
-    return find(junctions)
+    return findall(junctions)
 end
 
 #----------------------------------------------------------------------
@@ -311,9 +309,9 @@ Usage: ind = findisolatedpixels(b)
 Argument:  
      b :: AbstractArray{<:Integer, 2} - A binary image.
 
-Returns:   
-   ind :: Vector{Int64}
-                - Vector of linear indices of isolated pixels in the image.
+Returns:
+   ind :: An array of CartesianIndices into edgeimg marking the locations 
+          of isolated pixels.
 
 ```
 See also: findends, findjunctions, applylut
@@ -330,12 +328,12 @@ function findisolatedpixels(b::AbstractArray{T,2}) where T <: Integer
                         3 6 9
     =#
     function isolated(x::BitArray{1})
-        return x[5] && countnz(x) == 1
+        return x[5] && count(x) == 1
     end
 
     lut = makelut(isolated)
     b2 = applylut(b, lut)
-    return find(b2)
+    return findall(b2)
 end
 
 #----------------------------------------------------------------------
@@ -354,7 +352,7 @@ Returns:
 See also: removeisolatedpixels, findisolatedpixels
 """
 function removeisolatedpixels!(img::AbstractArray{T,2}) where T <: Integer
-    img[findisolatedpixels(img)] = zero(T)
+    img[findisolatedpixels(img)] .= zero(T)
     return img
 end
 
@@ -485,21 +483,21 @@ function thin(img::AbstractArray{T,2}) where T <: Integer
     lutG1G2G3p = makelut(G1G2G3p)
 
     bw = Bool.(img)
-    bw2 = BitArray(size(img))
-    Npix = countnz(bw)
+    bw2 = BitArray(undef, size(img))
+    Npix = count(bw)
     lastNpix = Npix+1
     
     # Iterate, alternating with lookup tables lutG1G2G3 and lutG1G2G3p.
     # Keep removing pixels until image does not change
     while lastNpix > Npix
         applylut!(bw2, bw, lutG1G2G3)
-        bw[bw2] = false
+        bw[bw2] .= false
 
         applylut!(bw2, bw, lutG1G2G3p)
-        bw[bw2] = false
+        bw[bw2] .= false
         
         lastNpix = Npix
-        Npix = countnz(bw)
+        Npix = count(bw)
     end
 
     return bw
