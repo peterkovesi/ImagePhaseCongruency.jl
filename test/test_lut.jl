@@ -1,4 +1,8 @@
-using ImagePhaseCongruency
+#=
+Testing for lut.jl
+=#
+
+using ImagePhaseCongruency, Test, Printf
 
 @printf("Testing morphological look up table functions...\n")
 
@@ -10,7 +14,7 @@ testimg =
  0  0  0  0  1  0  1  0  0  0  1  1  0  0  0
  0  0  0  0  0  1  0  0  0  1  0  0  1  0  0
  0  0  0  0  1  0  1  0  0  1  0  0  1  0  0
- 0  0  0  1  0  0  1  0  0  1  1  1  0  0  0
+ 0  1  0  1  0  0  1  0  0  1  1  1  0  0  0
  0  0  0  0  0  0  1  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  1  1  1  1  0  0  0  0  0
  0  0  0  0  0  0  1  0  0  0  0  0  0  0  0
@@ -21,17 +25,28 @@ testimg =
  0  0  1  0  0  0  0  0  0  0  0  0  0  0  0]
 
 @printf("Testing isolated pixels\n")
-(r,c) = ind2sub(testimg, ImagePhaseCongruency.findisolatedpixels(testimg))
-@test (r,c) == ([11, 13], [3, 3])
+
+ind = findisolatedpixels(testimg)
+@test testimg[ind] == [1,1,1]
+r = [ind[i][1] for i = 1:length(ind)]
+c = [ind[i][2] for i = 1:length(ind)]
+@test (r,c) == ([5, 11, 13], [2, 3, 3])
+
+b = copy(testimg)
+removeisolatedpixels!(b)
+@test b[ind] == [0, 0, 0]
 
 @printf("Testing endings\n")
-(r,c) = ind2sub(testimg, ImagePhaseCongruency.findends(testimg))
+ind = findends(testimg)
+r = [ind[i][1] for i = 1:length(ind)]
+c = [ind[i][2] for i = 1:length(ind)]
 @test (r,c) == ([1, 5, 2, 9, 7, 9, 10], [4, 4, 7, 7, 10, 11, 13])
 
 @printf("Testing junctions\n")
-(r,c) = ind2sub(testimg, ImagePhaseCongruency.findjunctions(testimg))
+ind = findjunctions(testimg)
+r = [ind[i][1] for i = 1:length(ind)]
+c = [ind[i][2] for i = 1:length(ind)]
 @test (r,c) == ([3, 7], [6, 7])
-
 
 @printf("Testing thinning\n")
 b = ImagePhaseCongruency.thin(testimg)

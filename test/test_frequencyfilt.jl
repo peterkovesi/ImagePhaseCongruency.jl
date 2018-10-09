@@ -1,6 +1,8 @@
-@printf("Testing frequencyfilt...\n")
+
 
 using ImagePhaseCongruency, TestImages, ImageView
+
+@printf("Testing frequencyfilt...\n")
 
 lena = Float64.(testimage("lena_gray"))
 
@@ -39,13 +41,15 @@ v = loggabor(f, fo, sigmaOnf)
 
 angl = pi/4
 wavelen = pi/8
-filter = cosineangularfilter(angl, wavelen, sintheta, costheta)
+flter = cosineangularfilter(angl, wavelen, sintheta, costheta)
 
 thetaSigma = .4
-filter = gaussianangularfilter(angl, thetaSigma, sintheta, costheta)
+flter = gaussianangularfilter(angl, thetaSigma, sintheta, costheta)
 
 (P, S, p, s) = perfft2(lena)
 
 s1 = geoseries(0.5, 2, 4)
 s2 = geoseries((0.5, 4), 4)
 # [0.5000,    1.0000,    2.0000,    4.0000]
+
+nothing

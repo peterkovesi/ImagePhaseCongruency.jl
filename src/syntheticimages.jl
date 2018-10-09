@@ -254,7 +254,7 @@ function starsine(sze::Integer=512; ncycles::Real=10, nscales::Integer=50,
     end
 
     # Grid of angular values
-    theta = [atan2(y,x) for x = l:u, y = l:u]
+    theta = [atan(y,x) for x = l:u, y = l:u]
 
     img = zeros(size(theta))
 
@@ -306,7 +306,7 @@ function noiseonf(sze::Tuple{Integer, Integer}, p::Real)
 
     # Construct the amplitude spectrum filter
     # Add 1 to avoid divide by 0 problems later
-    radius = filtergrid(rows,cols) * max(rows,cols) + 1
+    radius = filtergrid(rows,cols) * max(rows,cols) .+ 1
     filter = 1 ./ (radius.^p)
 
     # Reconstruct fft of noise image, but now with the specified amplitude
@@ -328,7 +328,7 @@ nophase -  Randomizes image phase leaving amplitude unchanged.
 ```
 Usage:   newimg = nophase(img)
 
-Argument:        img::Array{<:Real,2} - Input image
+Argument:        img::Array{T,2} where T <: Real - Input image
 
 Returns:     newimg::Array{Float64,2} - Image with randomized phase
 ```
@@ -340,7 +340,7 @@ harmonics.
 
 See also: noiseonf, quantizephase, swapphase
 """
-function nophase(img::Array{T,2}) where T <: Real
+function nophase(img::AbstractArray{T,2}) where T <: Real
 
     # Take FFT, get magnitude.
     IMG = fft(img)
@@ -349,7 +349,7 @@ function nophase(img::Array{T,2}) where T <: Real
     # Generate random phase values
     # ** ? Should I just randomize the phase for half the spectrum and
     # generate the other half as the complex conjugate ? **
-    phaseAng = rand(size(img))*2*pi
+    phaseAng = rand(Float64, size(img))*2*pi
     phase = cos.(phaseAng) .+ im.*sin.(phaseAng)
 
     # Reconstruct fft of image using original amplitude and randomized phase and
@@ -366,7 +366,7 @@ quantizephase - Quantize phase values in an image
 ```
 Usage:  qimg = quantizephase(img, N)
 
-Arguments: img::Array{<:Real,2} - Image to be processed
+Arguments: img::Array{T,2} where T <: Real - Image to be processed
                      N::Integer - Desired number of quantized phase values
 
 Returns:  qimg::Array{Float64,2} - Phase quantized image
@@ -377,7 +377,7 @@ as low as 4, or even 3!  Using N = 2 is also worth a look.
 
 See also: swapphase
 """
-function quantizephase(img::Array{T,2}, N::Integer) where T <: Real
+function quantizephase(img::AbstractArray{T,2}, N::Integer) where T <: Real
 
     IMG = fft(img)
     amp = abs.(IMG)
@@ -392,7 +392,7 @@ function quantizephase(img::Array{T,2}, N::Integer) where T <: Real
     # Subtract pi so that discrete values range [-pi - pi)
     # Add pi/N to counteract the phase shift induced by rounding towards 0
     # using floor
-    phase = floor.( (phase+pi-0.001)/(2*pi) * N) * (2*pi)/N - pi  + pi/N
+    phase = floor.( (phase .+ pi .- 0.001)/(2*pi) * N) * (2*pi)/N .- pi  .+ pi/N
 
     # Reconstruct Fourier transform with quantized phase values and take inverse
     # to obtain the new image.
@@ -417,7 +417,7 @@ Returns:
 
 See also: quantizephase, nophase
 """
-function swapphase(img1::Array{T,2}, img2::Array{T,2}) where T <: Real
+function swapphase(img1::AbstractArray{T,2}, img2::AbstractArray{T,2}) where T <: Real
 
     if size(img1) != size(img2)
 	error("Images must be the same size")
