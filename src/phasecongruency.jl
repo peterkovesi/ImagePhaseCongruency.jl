@@ -35,13 +35,14 @@ October  2018  Julia 0.7/1.0
 ---------------------------------------------------------------------=#
 using Images, FFTW, Statistics
 
-export phasecongmono, phasesymmono, ppdrc, highpassmonogeic  
+export phasecongmono, phasesymmono, ppdrc, highpassmonogenic  
 export gaborconvolve, monofilt 
 export phasecong3, phasesym, ppdenoise
 
 #--------------------------------------------------------------------
+# ppdrc
 """
-ppdrc - Phase Preserving Dynamic Range Compression
+Phase Preserving Dynamic Range Compression
 
 Generates a series of dynamic range compressed images at different scales.
 This function is designed to reveal subtle features within high dynamic range
@@ -60,10 +61,11 @@ The 2D analytic signal of the data is then computed to obtain local phase and
 amplitude at each point in the image. The amplitude is attenuated by adding 1
 and then taking its logarithm, the signal is then reconstructed using the
 original phase values.
-```
-Usage: (dimg, mask) = ppdrc(img, wavelength; clip, n)
 
-Arguments:     img - Image to be processed (can contain NaNs)
+```
+Usage: dimg = ppdrc(img, wavelength; clip, n)
+
+Arguments:     img - Image to be processed. A 2D array of Real or Gray elements.
         wavelength - Scalar value, or Vector, of wavelengths, in pixels, of 
                      the cut-in frequencies to be used when forming the highpass
                      versions of the image.  Try a range of values starting
@@ -80,21 +82,27 @@ Keyword arguments:
 Returns:      dimg - Array of the dynamic range reduced images.  If only
                      one wavelength is specified the image is returned 
                      directly, and not as a one element array of image arrays.
-             mask -  Boolean mask image indicating the non NaN regions of the 
-                     input image.
 ```
-Note when specifying the array 'wavelength' it is suggested that you use
-wavelengths that increase in a geometric series.  You can use the function
-geoseries() to conveniently do this
+
+Important: Scaling of the image affects the results.  If your image has values
+of order 1 or less it is useful to scale the image up a few orders of magnitude.
+The reason is that when the frequency amplitudes are attenuated we add one
+before taking the log to avoid obtaining negative results for values less than
+one.  Thus if `v` is small `log(1 + v)` will not be a good approximation to `log(v)`.
+However, if you scale the image by say, 1000 then `log(1 + 1000*v)` will be a reasonable
+approximation to `log(1000*v)`.
+
+When specifying the array `wavelength` it is suggested that you use wavelengths
+that increase in a geometric series.  You can use the function `geoseries()` to
+conveniently do this
  
-Example using geoseries() to generate a set of wavelengths that increase
+Example using `geoseries()` to generate a set of wavelengths that increase
 geometrically in 10 steps from 50 to 800. 
 ```
-   (dimg, mask) = ppdrc(img, geoseries((50 800), 10))
+   dimg = ppdrc(img, geoseries((50 800), 10))
 ```
-View the output images in the form of an Interactive Image using linimix()
 
-See also: highpassmonogenic, geoseries, linimix, histruncate
+See also: [`highpassmonogenic`](@ref), [`geoseries`](@ref)
 """
 function ppdrc(img::AbstractArray{T1,2}, wavelength::Vector{T2}; clip::Real=0.01, n::Integer=2) where {T1 <: Real, T2 <: Real}
     #=
@@ -106,15 +114,6 @@ function ppdrc(img::AbstractArray{T1,2}, wavelength::Vector{T2}; clip::Real=0.01
     =#
     
     nscale = length(wavelength)
-    
-    # Identify no-data regions in the image (assumed to be marked by NaN
-    # values). These values are filled by a call to fillnan() when passing image
-    # to highpassmonogenic.  While fillnan() is a very poor 'inpainting' scheme
-    # it does keep artifacts at the boundaries of no-data regions fairly small.
-    mask = .!isnan.(img)
-#  Implementation of fillnan() not available yet
-#    (ph, ~, E) = highpassmonogenic(fillnan(img), wavelength, n)
-#    (ph, ~, E) = highpassmonogenic(replacenan(img), wavelength, n)
     (ph, _, E) = highpassmonogenic(img, wavelength, n)
 
     # Construct each dynamic range reduced image 
@@ -122,12 +121,12 @@ function ppdrc(img::AbstractArray{T1,2}, wavelength::Vector{T2}; clip::Real=0.01
 
     if nscale == 1   # Single image, highpassmonogenic() will have returned single 
                      # images, hence this separate case 
-        dimg[1] = histtruncate(sin.(ph).*log1p.(E), clip, clip).*mask
+        dimg[1] = histtruncate(sin.(ph).*log1p.(E), clip, clip)
 
     else             # ph and E will be arrays of 2D arrays
         range = zeros(nscale,1)
         for k = 1:nscale
-            dimg[k] = histtruncate(sin.(ph[k]).*log1p.(E[k]), clip, clip).*mask
+            dimg[k] = histtruncate(sin.(ph[k]).*log1p.(E[k]), clip, clip)
             range[k] = maximum(abs.(dimg[k]))
         end
         
@@ -142,24 +141,32 @@ function ppdrc(img::AbstractArray{T1,2}, wavelength::Vector{T2}; clip::Real=0.01
     end        
 
     if nscale == 1   # Single image, return output matrix directly
-        return dimg[1], mask
+        return dimg[1]
     else
-        return dimg, mask
+        return dimg
     end
 end
 
 # Case when wavelength is a single value
-function ppdrc(img::AbstractArray{<:Real,2}, wavelength::Real; clip::Real=0.01, n::Integer=2) 
+function ppdrc(img::AbstractArray{T1,2}, wavelength::Real; clip::Real=0.01, n::Integer=2) where T1 <: Real
     return ppdrc(img, [wavelength]; clip=clip, n=n)
 end
 
+# Case for an image of Gray values
+function ppdrc(img::AbstractArray{T1,2}, wavelength::Real; clip::Real=0.01, n::Integer=2) where T1 <: Gray
+    fimg = Float64.(img)
+    return ppdrc(fimg, wavelength; clip=clip, n=n)
+end
+
+
 #--------------------------------------------------------------------
+# highpassmonogenic
 """
-highpassmonogenic - Compute phase and amplitude on highpass images via monogenic filters
+Compute phase and amplitude in highpass images via monogenic filters.
 ```
 Usage: (phase, orient, E) = highpassmonogenic(img, maxwavelength, n)
 
-Arguments:           img - Image to be processed.
+Arguments:           img - Image to be processed.  A 2D array of Real or Gray elements.
            maxwavelength - Wavelength(s) in pixels of the  cut-in frequency(ies)
                            of the Butterworth highpass filter. 
                        n - The order of the Butterworth filter. This is an
@@ -173,10 +180,10 @@ Returns:           phase - The local phase. Values are between -pi/2 and pi/2
                            +-pi/2 the orientation will be poorly defined.
                        E - Local energy, or amplitude, of the signal.
 ```
-Note that maxwavelength can be an array in which case the outputs will 
-be nscales x 1 arrays of output images.  Where nscales = length(maxwavelength).
+Note that `maxwavelength` can be an array in which case the outputs will 
+be an array of output images of length `nscales`,  where `nscales = length(maxwavelength)`.
 
-See also: ppdrc, monofilt
+See also: [`ppdrc`](@ref), [`monofilt`](@ref)
 """
 function highpassmonogenic(img::AbstractArray{T1,2}, maxwavelength::Vector{T2}, n::Integer) where {T1 <: Real, T2 <: Real}
 
@@ -221,12 +228,19 @@ function highpassmonogenic(img::AbstractArray{T,2}, maxwavelength::Real, n::Inte
     return highpassmonogenic(img, [maxwavelength], n) 
 end
 
-#--------------------------------------------------------------------
-"""
-phasecongmono - Phase congruency of an image using monogenic filters
+# Case for an image of Gray values
+function highpassmonogenic(img::AbstractArray{T,2}, maxwavelength::Real, n::Integer) where T <: Gray
+    fimg = Float64.(img)
+    return highpassmonogenic(fimg, maxwavelength, n) 
+end
 
-This code is considerably faster than phasecong3() but you may prefer the
-output from phasecong3()'s oriented filters.
+#--------------------------------------------------------------------
+# phasecongmono
+"""
+Phase congruency of an image using monogenic filters.
+
+This code is considerably faster than `phasecong3()` but you may prefer the
+output from `phasecong3()`'s oriented filters.
 
 There are potentially many arguments, here is the full usage:
 ```
@@ -237,14 +251,14 @@ There are potentially many arguments, here is the full usage:
 However, apart from the image, all parameters have defaults and the
 usage can be as simple as:
 
-   PC = phasecongmono(img)[1]   # (Use [1] so that PC is not a tuple of all
-                                # the return values)
+   (PC,) = phasecongmono(img)   # Use (PC,) so that PC is not a tuple of all
+                                # the returned values
 
 More typically you will pass the image followed by a series of keyword
 arguments that you wish to set, leaving the remaining parameters set to
 their defaults, for example:
 
-   PC = phasecongmono(img, nscale = 5, minwavelength = 3, k = 2.5)[1]
+   (PC,) = phasecongmono(img, nscale = 5, minwavelength = 3, k = 2.5)
 
 Keyword arguments:
              Default values      Description
@@ -294,7 +308,7 @@ Returned values:
 The convolutions are done via the FFT.  Many of the parameters relate to the
 specification of the filters in the frequency plane.  The values do not seem
 to be very critical and the defaults are usually fine.  You may want to
-experiment with the values of 'nscales' and 'k', the noise compensation
+experiment with the values of `nscales` and `k`, the noise compensation
 factor.
 
 Typical sequence of operations to obtain an edge image:
@@ -310,11 +324,10 @@ sigmaonf       .65   mult 2.1
 sigmaonf       .55   mult 3       (filter bandwidth ~2 octaves)
 ```
 Note that better results are generally achieved using the large
-bandwidth filters.  I typically use a sigmaOnf value of 0.55 or even
+bandwidth filters.  I typically use a `sigmaOnf` value of 0.55 or even
 smaller.
 
-See also:  phasecong, phasecong3, phasesymmono, gaborconvolve,
-plotgaborfilters, filtergrid
+See also:  [`phasecong3`](@ref), [`phasesymmono`](@ref), [`gaborconvolve`](@ref), [`filtergrid`](@ref)
 """
 function phasecongmono(img::AbstractArray{T1,2}; nscale::Integer = 4, minwavelength::Real = 3, 
                        mult::Real = 2.1, sigmaonf::Real = 0.55, k::Real = 3.0,
@@ -342,9 +355,9 @@ References:
     epsilon         = .0001            # Used to prevent division by zero.
 
     (rows,cols) = size(img)
-#    IMG = perfft2(img)[1]             # Periodic Fourier transform of image
+#    (IMG,) = perfft2(img)             # Periodic Fourier transform of image
                                        # (Just get the first returned value)
-    IMG = fft(img)
+    IMG = fft(img)                     # Use fft rather than perfft2
 
     sumAn  = zeros(rows,cols)         # Accumulators
     sumf   = zeros(rows,cols)                                  
@@ -478,7 +491,7 @@ References:
     #------ Final computation of key quantities -------
 
     # Orientation - this varies +/- pi/2
-    @. or = atan(sumh2/sumh1)   
+    @. or = atan(-sumh2/sumh1)   
     
     # Feature type - a phase angle -pi/2 to pi/2.
     @. ft = atan(sumf, sqrt(sumh1^2 + sumh2^2))    
@@ -507,7 +520,20 @@ References:
 
     return PC, or, ft, T
 end
-    
+
+# Case for an image of Gray values
+function phasecongmono(img::AbstractArray{T1,2}; nscale::Integer = 4, minwavelength::Real = 3, 
+                       mult::Real = 2.1, sigmaonf::Real = 0.55, k::Real = 3.0,
+                       noisemethod::Real = -1, cutoff::Real = 0.5, g::Real = 10.0,
+                       deviationgain::Real = 1.5) where T1 <: Gray
+
+    fimg = Float64.(img)
+    return phasecongmono(fimg, nscale=nscale, minwavelength=minwavelength, mult=mult, sigmaonf=sigmaonf,
+                         k=k, noisemethod=noisemethod, cutoff=cutoff, g=g, deviationgain=deviationgain)
+end
+
+
+
 #-------------------------------------------------------------------------
 """
 rayleighmode
@@ -543,27 +569,28 @@ function rayleighmode(data, nbins::Integer= 50)
 end
 
 #-------------------------------------------------------------------------
+# phasesymmono
 """
-phasesymmono - Phase symmetry of an image using monogenic filters
+Phase symmetry of an image using monogenic filters.
 
 This function calculates the phase symmetry of points in an image.
 This is a contrast invariant measure of symmetry.  This function can be
-used as a line and blob detector.  The greyscale 'polarity' of the lines
+used as a line and blob detector.  The greyscale polarity of the lines
 that you want to find can be specified.
 
-This code is considerably faster than phasesym() but you may prefer the
-output from phasesym()'s oriented filters.
+This code is considerably faster than `phasesym()` but you may prefer the
+output from `phasesym()`'s oriented filters.
 
 There are potentially many arguments, here is the full usage:
 ```
-  (phaseSym, symmetryEnergy, T) = 
+  (phSym, symmetryEnergy, T) = 
                phasesymmono(img; nscale, minwaveLength, mult,
                             sigmaonf, k, polarity, noisemethod)
 ```
 However, apart from the image, all parameters have defaults and the
 usage can be as simple as:
 ```
-   phaseSym = phasesymmono(img)[1]
+   (phSym,) = phasesymmono(img)
  
 Keyword arguments:
              Default values      Description
@@ -590,37 +617,26 @@ Keyword arguments:
                            A value of 0 will turn off all noise compensation.
 
 Return values:
-   phaseSym              - Phase symmetry image (values between 0 and 1).
+   phSym                 - Phase symmetry image (values between 0 and 1).
    symmetryEnergy        - Un-normalised raw symmetry energy which may be
                            more to your liking.
    T                     - Calculated noise threshold (can be useful for
                            diagnosing noise characteristics of images)
 ```
 
-Notes on specifying parameters:  
-```
-The parameters can be specified as a full list eg.
- > phaseSym = phasesym(im, 5, 3, 2.5, 0.55, 2.0, 0);
-
-or as a partial list with unspecified parameters taking on default values
-  > phaseSym = phasesym(im, 5, 3);
-
-or as a partial list of parameters followed by some parameters specified via a
-keyword-value pair, remaining parameters are set to defaults, for example:
-  > phaseSym = phasesym(im, 5, 3, 'polarity',-1, 'k', 2.5);
- 
 The convolutions are done via the FFT.  Many of the parameters relate to the
 specification of the filters in the frequency plane.  The values do not seem
 to be very critical and the defaults are usually fine.  You may want to
-experiment with the values of 'nscales' and 'k', the noise compensation factor.
+experiment with the values of `nscales` and `k`, the noise compensation factor.
 
 Notes on filter settings to obtain even coverage of the spectrum
+```
 sigmaonf       .85   mult 1.3
 sigmaonf       .75   mult 1.6     (filter bandwidth ~1 octave)
 sigmaonf       .65   mult 2.1  
 sigmaonf       .55   mult 3       (filter bandwidth ~2 octaves)
 ```
-See Also:  phasesym, phasecongmono
+See Also:  [`phasesym`](@ref), [`phasecongmono`](@ref)
 """
 function phasesymmono(img::AbstractArray{T1,2}; nscale::Integer = 5, minwavelength::Real = 3, 
                        mult::Real = 2.1, sigmaonf::Real = 0.55, k::Real = 2.0,
@@ -763,20 +779,31 @@ References:
     # and normalize symmetryEnergy by the sumAn to obtain phase symmetry.
     # Note the max operation is not necessary if you are after speed, it is
     # just 'tidy' not having -ve symmetry values
-    phaseSym = max.(symmetryEnergy .- T, 0) ./ (sumAn .+ epsilon)
+    phSym = max.(symmetryEnergy .- T, 0) ./ (sumAn .+ epsilon)
     
-    return phaseSym, symmetryEnergy, T    
+    return phSym, symmetryEnergy, T    
 end
-    
-#------------------------------------------------------------------
-"""
-monofilt - Apply monogenic filters to an image to obtain 2D analytic signal
 
-Implementation of Felsberg's monogenic filters
+# Version for an array of Gray elements
+function phasesymmono(img::AbstractArray{T1,2}; nscale::Integer = 5, minwavelength::Real = 3, 
+                       mult::Real = 2.1, sigmaonf::Real = 0.55, k::Real = 2.0,
+                      polarity::Integer = 0, noisemethod::Real = -1) where T1 <: Gray
+    fimg = Float64.(img)
+    return phasesymmono(fimg; nscale=nscale, minwavelength= minwavelength, 
+                       mult=mult, sigmaonf=sigmaonf, k=k,
+                       polarity=polarity, noisemethod=noisemethod) 
+end
+
+#------------------------------------------------------------------
+# monofilt
+"""
+Apply monogenic filters to an image to obtain 2D analytic signal.
+
+This is an implementation of Felsberg's monogenic filters
 ```
 Usage: (f, h1f, h2f, A, theta, psi) = 
             monofilt(img, nscale, minWaveLength, mult, sigmaOnf, orientWrap)
-                             3         4           2     0.65      1/0
+                             3         4           2     0.65    true/false
 Arguments:
 The convolutions are done via the FFT.  Many of the parameters relate 
 to the specification of the filters in the frequency plane.  
@@ -784,7 +811,7 @@ to the specification of the filters in the frequency plane.
   Variable       Suggested   Description
   name           value
  ----------------------------------------------------------
-   img                       Image to be convolved.
+   img                       Image to be convolved. An Array of Real or Gray.
    nscale          = 3       Number of filter scales.
    minWaveLength   = 4       Wavelength of smallest scale filter.
    mult            = 2       Scaling factor between successive filters.
@@ -805,13 +832,13 @@ Returns:
    theta  - vector of phase orientation responses.
      psi  - vector of phase angle responses.
 ```
-If orientWrap is true theta will be returned in the range 0 .. pi
+If `orientWrap` is true `theta` will be returned in the range `0 .. pi`
 
-Experimentation with sigmaonf can be useful depending on your application.
+Experimentation with `sigmaonf` can be useful depending on your application.
 I have found values as low as 0.2 (a filter with a *very* large bandwidth)
 to be useful on some occasions.
 
-See also: gaborconvolve
+See also: [`gaborconvolve`](@ref)
 """
 function  monofilt(img::AbstractArray{T1,2}, nscale::Integer, minWaveLength::Real, mult::Real, 
                    sigmaOnf::Real, orientWrap::Bool = false) where T1 <: Real
@@ -879,9 +906,17 @@ function  monofilt(img::AbstractArray{T1,2}, nscale::Integer, minWaveLength::Rea
     return f, h1f, h2f, A, theta, psi
 end    
 
+# Version for an array of Gray elements
+function  monofilt(img::AbstractArray{T1,2}, nscale::Integer, minWaveLength::Real, mult::Real, 
+                   sigmaOnf::Real, orientWrap::Bool = false) where T1 <: Gray
+    fimg = Float64.(img)
+    return monofilt(fimg, nscale, minWaveLength, mult, sigmaOnf, orientWrap)
+end
+
 #------------------------------------------------------------------
+# gaborconvolve
 """
-gaborconvolve - function for convolving image with log-Gabor filters
+Convolve an image with a bank of log-Gabor filters.
 ```
 Usage: (EO, BP) = gaborconvolve(img,  nscale, norient, minWaveLength, mult,
                                  sigmaOnf, dThetaOnSigma, Lnorm)
@@ -938,13 +973,13 @@ sigmaOnf  .75   mult 1.4       (bandwidth ~1 octave)
 sigmaOnf  .65   mult 1.7
 sigmaOnf  .55   mult 2.2       (bandwidth ~2 octaves)
 ```                                                       
-The determination of mult given sigmaOnf is entirely empirical.  What I do is
+The determination of `mult` given `sigmaOnf` is entirely empirical.  What I do is
 plot out the sum of the squared filter amplitudes in the frequency domain and
 see how even the coverage of the spectrum is.  If there are concentric 'gaps'
-in the spectrum one needs to reduce mult and/or reduce sigmaOnf (which
+in the spectrum one needs to reduce mult and/or reduce `sigmaOnf` (which
 increases filter bandwidth)
 
-If there are 'gaps' radiating outwards then one needs to reduce dthetaOnSigma
+If there are 'gaps' radiating outwards then one needs to reduce `dthetaOnSigma`
 (increasing angular bandwidth of the filters)
 
 """
@@ -1044,23 +1079,28 @@ function gaborconvolve(img::AbstractArray{T1,2}, nscale::Integer, norient::Integ
     return  EO, BP
 end
 
-#------------------------------------------------------------------
-"""
-phasecong3 - Computes edge and corner phase congruency in an image.
+# Version for an array of Gray elements
+function gaborconvolve(img::AbstractArray{T1,2}, nscale::Integer, norient::Integer, minWaveLength::Real, 
+                       mult::Real, sigmaOnf::Real, dThetaOnSigma::Real, Lnorm::Integer = 0) where T1 <: Gray
+    fimg = Float64.(img)
+    return gaborconvolve(fimg, nscale, norient, minWaveLength, mult, sigmaOnf, dThetaOnSigma, Lnorm)
+end
 
-This function calculates the PC_2 measure of phase congruency.  
-This function supersedes phasecong2() and phasecong() being faster and requires
-less memory
+#------------------------------------------------------------------
+# phasecong3
+"""
+Computes edge and corner phase congruency in an image via log-Gabor filters.
 
 There are potentially many arguments, here is the full usage:
 ```
   (M, m, or, ft, EO, T) = phasecong3(img; nscale, norient, minwavelength, 
                           mult, sigmaonf, k, cutoff, g, noisemethod)
+```
 
 However, apart from the image, all parameters have defaults and the
 usage can be as simple as:
-
-    M = phasecong3(img)[1]
+```
+    (M,) = phasecong3(img)
  
 Keyword Arguments:
              Default values      Description
@@ -1092,9 +1132,8 @@ Returned values:
                 This is used as a indicator of edge strength.
    m          - Minimum moment of phase congruency covariance.
                 This is used as a indicator of corner strength.
-   or         - Orientation image in integer degrees 0-180,
-                positive anticlockwise.
-                0 corresponds to a vertical edge, 90 is horizontal.
+   or         - Orientation image in radians -pi/2 to pi/2,  +ve anticlockwise.
+                0 corresponds to a vertical edge, pi/2 is horizontal.
    ft         - Local weighted mean phase angle at every point in the
                 image.  A value of pi/2 corresponds to a bright line, 0
                 corresponds to a step and -pi/2 is a dark line.
@@ -1105,20 +1144,19 @@ Returned values:
                 this you can then specify fixed thresholds and save some
                 computation time.
 ```
-EO[s,o] = convolution result for scale s and orientation o.  The real part
+`EO[s,o]` = convolution result for scale `s` and orientation `o`.  The real part
 is the result of convolving with the even symmetric filter, the imaginary
 part is the result from convolution with the odd symmetric filter.
 
   Hence:
-      abs.(EO[s,o]) returns the magnitude of the convolution over the
-      image at scale s and orientation o.
-      angle.(EO[s,o]) returns the phase angles.
+      `abs.(EO[s,o])` returns the magnitude of the convolution over the
+      image at scale `s` and orientation `o`,  
+      `angle.(EO[s,o])` returns the phase angles.
    
-Note on specifying parameters:  
 The convolutions are done via the FFT.  Many of the parameters relate to the
 specification of the filters in the frequency plane.  The values do not seem
 to be very critical and the defaults are usually fine.  You may want to
-experiment with the values of 'nscales' and 'k', the noise compensation factor.
+experiment with the values of `nscales` and `k`, the noise compensation factor.
 
 Some filter parameters to obtain even coverage of the spectrum
 ```
@@ -1127,7 +1165,7 @@ sigmaonf       .75   mult 1.6     (filter bandwidth ~1 octave)
 sigmaonf       .65   mult 2.1  
 sigmaonf       .55   mult 3       (filter bandwidth ~2 octaves)
 ```
-See Also:  phasesym, gaborconvolve, plotgaborfilters
+See also:  [`phasesym`](@ref), [`gaborconvolve`](@ref)
 """
 function phasecong3(img::AbstractArray{T1,2}; nscale::Integer = 4, norient::Integer = 6, 
                     minwavelength::Real = 3, mult::Real = 2.1, sigmaonf::Real = 0.55, 
@@ -1361,7 +1399,7 @@ function phasecong3(img::AbstractArray{T1,2}; nscale::Integer = 4, norient::Inte
     end
 
     # Orientation and feature phase/type computation
-    @views or = atan.(EnergyV[:,:,3]./EnergyV[:,:,2])
+    @views or = atan.(-EnergyV[:,:,3]./EnergyV[:,:,2])
     
     OddV = sqrt.(EnergyV[:,:,2].^2 + EnergyV[:,:,3].^2)
     @views featType = atan.(EnergyV[:,:,1], OddV)  # Feature phase  pi/2 <-> white line,
@@ -1370,27 +1408,41 @@ function phasecong3(img::AbstractArray{T1,2}; nscale::Integer = 4, norient::Inte
     return M, m, or, featType, EO, T
 end
 
+
+# Version for an array of Gray elements
+function phasecong3(img::AbstractArray{T1,2}; nscale::Integer = 4, norient::Integer = 6, 
+                    minwavelength::Real = 3, mult::Real = 2.1, sigmaonf::Real = 0.55, 
+                    k::Real = 2, cutoff::Real = 0.5, g::Real = 10, 
+                    noisemethod::Real = -1) where T1 <: Gray
+    fimg = Float64.(img)
+    return phasecong3(fimg; nscale=nscale, norient=norient, 
+                    minwavelength=minwavelength, mult=mult, sigmaonf=sigmaonf, 
+                    k=k, cutoff=cutoff, g=g, noisemethod=noisemethod)
+end
+
+
 #------------------------------------------------------------------
+# phasesym
 """
-phasesym - Function for computing phase symmetry on an image.
+Compute phase symmetry on an image via log-Gabor filters.
 
 This function calculates the phase symmetry of points in an image.
 This is a contrast invariant measure of symmetry.  This function can be
-used as a line and blob detector.  The greyscale 'polarity' of the lines
+used as a line and blob detector.  The greyscale polarity of the lines
 that you want to find can be specified.
 
 ```
-Usage:   (phaseSym, orientation, totalEnergy, T) = 
+Usage:   (phSym, orientation, totalEnergy, T) = 
                 phasesym(img; nscale = 5, norient = 6, minwavelength = 3, mult = 2.1, 
                          sigmaonf = 0.55, k = 2, polarity = 0, noisemethod = -1)
 
 However, apart from the image, all parameters have defaults and the
 usage can be as simple as:
 
-    phaseSym = phasesym(im)[1]
+    (phSym,) = phasesym(img)
 
 Argument:
-                    img  - Image to be processed
+                    img  - Image to be processed. 2D Array of Real or Gray
  
 Keyword Arguments:
               Default values      Description
@@ -1416,10 +1468,10 @@ Keyword Arguments:
                                0+ use noiseMethod value as the fixed noise threshold.
 
 Return values:
-    phaseSym              - Phase symmetry image (values between 0 and 1).
+    phSym                 - Phase symmetry image (values between 0 and 1).
     orientation           - Orientation image. Orientation in which local
-                            symmetry energy is a maximum, in degrees
-                            (0-180), angles positive anti-clockwise. Note
+                            symmetry energy is a maximum, in radians
+                            (-pi/2 - pi/2), angles positive anti-clockwise. Note
                             the orientation info is quantized by the number
                             of orientations
     totalEnergy           - Un-normalised raw symmetry energy which may be
@@ -1433,7 +1485,7 @@ Return values:
 The convolutions are done via the FFT.  Many of the parameters relate to the
 specification of the filters in the frequency plane.  The values do not seem
 to be very critical and the defaults are usually fine.  You may want to
-experiment with the values of 'nscales' and 'k', the noise compensation factor.
+experiment with the values of `nscales` and `k`, the noise compensation factor.
 
 Notes on filter settings to obtain even coverage of the spectrum
 ```
@@ -1442,11 +1494,11 @@ sigmaonf       .75   mult 1.6     (filter bandwidth ~1 octave)
 sigmaonf       .65   mult 2.1  
 sigmaonf       .55   mult 3       (filter bandwidth ~2 octaves)
 ```
-See Also:  phasesymmono, phasecong3
+See also:  [`phasesymmono`](@ref), [`phasecong3`](@ref)
 """
-function  phasesym(img::AbstractArray{T1,2}; nscale::Integer = 5, norient::Integer = 6, 
-                   minwavelength::Real = 3, mult::Real = 2.1, sigmaonf::Real = 0.55, 
-                   k::Real = 2.0, polarity::Integer = 0, noisemethod::Real = -1) where T1 <: Real
+function phasesym(img::AbstractArray{T1,2}; nscale::Integer = 5, norient::Integer = 6, 
+                  minwavelength::Real = 3, mult::Real = 2.1, sigmaonf::Real = 0.55, 
+                  k::Real = 2.0, polarity::Integer = 0, noisemethod::Real = -1) where T1 <: Real
     #=
     References:
     Peter Kovesi, "Symmetry and Asymmetry From Local Phase" AI'97, Tenth
@@ -1619,17 +1671,28 @@ function  phasesym(img::AbstractArray{T1,2}; nscale::Integer = 5, norient::Integ
     
     # Normalize totalEnergy by the totalSumAn to obtain phase symmetry
     # totalEnergy is floored at 0 to eliminate -ve values
-    phaseSym = max.(totalEnergy, 0) ./ (totalSumAn .+ epsilon)
+    phSym = max.(totalEnergy, 0) ./ (totalSumAn .+ epsilon)
     
-    # Convert orientation values to radians
-    orientation .*= pi/norient
+    # Convert orientation values to radians and offset to suit thin_edges_nonmaxsup()
+    orientation .= orientation*pi/norient .- pi/2
 
-    return phaseSym, orientation, totalEnergy, T
+    return phSym, orientation, totalEnergy, T
 end    
 
+# Version for an array of Gray elements
+function phasesym(img::AbstractArray{T1,2}; nscale::Integer = 5, norient::Integer = 6, 
+                  minwavelength::Real = 3, mult::Real = 2.1, sigmaonf::Real = 0.55, 
+                  k::Real = 2.0, polarity::Integer = 0, noisemethod::Real = -1) where T1 <: Gray
+    fimg = Float64.(img)
+    return phasesym(fimg; nscale=nscale, norient=norient, 
+                    minwavelength=minwavelength, mult=mult, sigmaonf=sigmaonf, 
+                    k=k, polarity=polarity, noisemethod=noisemethod)
+end
+
 #------------------------------------------------------------------
+# ppdenoise
 """
-ppdenoise - Phase preserving wavelet image denoising.
+Phase preserving wavelet image denoising.
 
 ```
 Usage: cleanimage = ppdenoise(img,  nscale = 5, norient = 6,
@@ -1748,4 +1811,12 @@ function ppdenoise(img::AbstractArray{T1,2}; nscale::Integer=5, norient::Integer
     return real.(totalEnergy)
 end
 
-
+# Version for an array of Gray elements
+function ppdenoise(img::AbstractArray{T1,2}; nscale::Integer=5, norient::Integer=6,
+                   mult::Real=2.5, minwavelength::Real = 2, sigmaonf::Real = 0.55, 
+                   dthetaonsigma::Real = 1.0, k::Real=3, softness::Real=1.0) where T1 <: Gray
+    fimg = Float64.(img)
+    return ppdenoise(fimg; nscale=nscale, norient=norient,
+                     mult=mult, minwavelength=minwavelength, sigmaonf=sigmaonf, 
+                     dthetaonsigma=dthetaonsigma, k=k, softness=softness)
+end

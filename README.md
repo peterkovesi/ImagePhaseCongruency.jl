@@ -4,56 +4,28 @@ ImagePhaseCongruency
 
 ----------------------------------------------
 
-![banner image](doc/banner.png)
+![banner image](logo.png)
 
 ## Installation
 
-Install via the package manager.  At the moment you should checkout
-the current master.  The package runs under Julia 0.6, however it is
-not yet in a state that I consider worth tagging.
+At the moment the package is not registered. Use the following command in
+the package manager
 
-```
-julia> Pkg.checkout("ImagePhaseCongruency")
-```
+`pkg> add https://github.com/peterkovesi/ImagePhaseCongruency.jl`
 
-
-```
-help?> ImagePhaseCongruency  # Lists a summary of the package functions 
-```
 
 ## Summary
 
-This package implements a number of functions based on the phase
-congruency theory of feature detection.  Local phase information,
-rather than local image gradients, is used as the fundamental building
-block for constructing feature detectors.
+This package provides a collection of image processing functions that exploit
+the importance of phase information in our perception of images.  Local phase
+information, rather than local image gradients, is used as the fundamental
+building block for constructing feature detectors.
 
-The main problem with feature detection techniques based on image
-gradients is that they are sensitive to image contrast variations.
-For example, the Harris corner detector response is proportional to
-the image gradient raised to the 4th power!  
+The functions form two main groups:
 
-Using phase information it is possible to characterize image features
-in a way that is invariant to image illumination and contrast.  This
-allows edges, lines and other features to be detected reliably, and
-fixed thresholds can be applied over wide classes of images. Points of
-local symmetry and asymmetry in images can be detected from the
-special arrangements of phase that arise at these points, and the
-level of symmetry/asymmetry can be characterized by invariant
-measures.
+1) Functions that detect specific patterns of local phase for the purpose of feature detection.  
+
+2) Functions that enhance an image in a way that does not corrupt the local phase so that our perception of important features are not disrupted.
 
 
-## Function Reference
-
-* [**phasecongruency**](doc/phasecongruency.md) 
-
-## Notes
-
-* These functions are mostly ported from MATLAB code at
- [http://www.peterkovesi.com/matlabfns](http://www.peterkovesi.com/matlabfns/index.html)
- Accordingly some of the code is still MATLABesque in nature.  There
- are, no doubt, many optimisations that could be made and type
- instabilities to be eliminated. Pull requests to make the code more Julian
- are welcome.
-
-
+## Documentation

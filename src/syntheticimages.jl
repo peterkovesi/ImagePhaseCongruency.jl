@@ -41,14 +41,18 @@ export step2line, circsine, starsine, noiseonf
 export nophase, quantizephase, swapphase
 
 #----------------------------------------------------------------------
-"""          
-step2line - A phase congruent test image that interpolates from a step to a line.
 
-Function generates a test image where the feature type changes from a
-step edge to a line feature from top to bottom.  Gradient based edge
-detectors will only correctly mark the step-like feature towards the
-top of the image. mark two features towards the bottom of the image
-whereas phasecogruency will mark a single feature.
+# step2line
+"""          
+A phase congruent test image that interpolates from a step to a line.
+
+Generates a test image where the feature type changes from a step edge to a line
+feature from top to bottom.  Gradient based edge detectors will only correctly
+mark the step-like feature towards the top of the image and incorrectly mark two
+features towards the bottom of the image whereas phase congruency will correctly
+mark a single feature from top to bottom.  In general, natural images contain a
+roughly uniform distribution of the full continuum of feature types from step to
+line.
 
 ```
 Usage:
@@ -80,7 +84,7 @@ Examples of use:
   > img = step2line(ncycles=3, ampexponent=-1.5, phasecycles = 3); 
 
 ```
-See also:  circsine, starsine
+See also:  [`circsine`](@ref), [`starsine`](@ref)
 """
 function step2line(sze::Integer = 512; nscales::Integer=50, ampexponent::Real = -1, 
                    ncycles::Real = 1.5, phasecycles::Real = 0.25)
@@ -117,8 +121,11 @@ function step2line(sze::Integer = 512; nscales::Integer=50, ampexponent::Real = 
 end
 
 #----------------------------------------------------------------------
+# circsine
 """
-circsine -  Generates phase congruent circular sine wave grating
+Generate a phase congruent circular sine wave grating.
+
+Useful for testing the isotropy of response of a feature dectector.
 
 ```
 Usage:    img = circsine(sze; wavelength = 40, nscales = 50, ampexponent = -1, 
@@ -162,7 +169,7 @@ Examples:
                                                               square and triangular 
 > circsine(nscales = 50, ampexponent = -1.5, offset = 0)    - Looks like a square but is not.
 ```
-See also: starsine, step2line
+See also: [`starsine`](@ref), [`step2line`](@ref)
 """
 function circsine(sze::Integer=512; wavelength::Real=40, nscales::Integer=50,
                   ampexponent::Real=-1, offset::Real=0, p::Integer=2, 
@@ -200,8 +207,11 @@ function circsine(sze::Integer=512; wavelength::Real=40, nscales::Integer=50,
 end
     
 #----------------------------------------------------------------------
+# starsine
 """
-starsine - Generates phase congruent star shaped sine wave grating
+Generate a phase congruent star shaped sine wave grating.
+
+Useful for testing the behaviour of feature detectors at line junctions.
 
 ```
 Usage:    img = starsine(sze; ncycles=10, nscales=50, ampexponent=-1, offset=0)
@@ -238,7 +248,7 @@ Examples:
                                                               square and triangular 
 > starsine(nscales = 50, ampexponent = -1.5, offset = 0)    - Looks like a square but is not.
 ```
-See also: circsine, step2line
+See also: [`circsine`](@ref), [`step2line`](@ref)
 """
 function starsine(sze::Integer=512; ncycles::Real=10, nscales::Integer=50, 
                   ampexponent::Real=-1, offset::Real=0)
@@ -266,10 +276,10 @@ function starsine(sze::Integer=512; ncycles::Real=10, nscales::Integer=50,
 end 
 
 #----------------------------------------------------------------------
+# noiseonf
 """
-noiseonf - Creates 1/f^p spectrum noise images.
+Create \$1/f^p\$ spectrum noise images.
 
-Function to create noise images having 1/f^p amplitude spectrum properties.
 When displayed as a surface these images also generate great landscape
 terrain. 
 ```
@@ -323,12 +333,13 @@ end
 
 
 #--------------------------------------------------------------------
+# nophase
 """
-nophase -  Randomizes image phase leaving amplitude unchanged.
+Randomize image phase leaving amplitude spectrum unchanged.
 ```
 Usage:   newimg = nophase(img)
 
-Argument:        img::Array{T,2} where T <: Real - Input image
+Argument:       img::AbstractArray{T,2} where T <: Real - Input image
 
 Returns:     newimg::Array{Float64,2} - Image with randomized phase
 ```
@@ -338,7 +349,7 @@ these are textures which have an amplitude spectrum that have a limited number
 of isolated peaks. That is, a texture made up from a limited number of strong
 harmonics.
 
-See also: noiseonf, quantizephase, swapphase
+See also: [`noiseonf`](@ref), [`quantizephase`](@ref), [`swapphase`](@ref)
 """
 function nophase(img::AbstractArray{T,2}) where T <: Real 
     
@@ -361,8 +372,9 @@ function nophase(img::AbstractArray{T,2}) where T <: Real
 end
 
 #--------------------------------------------------------------------
+# quantizephase
 """
-quantizephase - Quantize phase values in an image
+Quantize phase values in an image.
 ```
 Usage:  qimg = quantizephase(img, N)
 
@@ -375,7 +387,7 @@ Phase values in an image are important.  However, despite this, they can be
 quantized very heavily with little perceptual loss.  The value of N can be
 as low as 4, or even 3!  Using N = 2 is also worth a look.
 
-See also: swapphase
+See also: [`swapphase`](@ref)
 """
 function quantizephase(img::AbstractArray{T,2}, N::Integer) where T <: Real
     
@@ -401,8 +413,9 @@ function quantizephase(img::AbstractArray{T,2}, N::Integer) where T <: Real
 end
 
 #--------------------------------------------------------------------
+# swapphase
 """    
-swapphase - Demonstrates phase amplitude swapping of images
+Demonstrates phase - amplitude swapping between images.
 ```
 Usage:   (newimg1, newimg2) = swapphase(img1, img2)
 
@@ -415,7 +428,7 @@ Returns:
     newimg2::Array{Float64,2} - Phase of img2, magnitude of img1.
 ```
 
-See also: quantizephase, nophase
+See also: [`quantizephase`](@ref), [`nophase`](@ref)
 """
 function swapphase(img1::AbstractArray{T,2}, img2::AbstractArray{T,2}) where T <: Real
     
