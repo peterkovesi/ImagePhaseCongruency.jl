@@ -41,8 +41,9 @@ export geoseries
 # export homomorphic
 
 #--------------------------------------------------------------------
+# filtergrids
 """
-filtergrids - Generates grids for constructing frequency domain filters
+Generate grids for constructing frequency domain filters.
 ```
 Usage:  (f, fx, fy) = filtergrids(rows, cols)
         (f, fx, fy) = filtergrids((rows, cols))
@@ -59,7 +60,7 @@ Returns:             f - Grid of size (rows, cols) containing frequency
                          respectively. fx and fy are quadrant shifted.
 ```
 
-See also: filtergrid()  where you are only needing radius
+See also: [`filtergrid`](@ref)  where you are only needing radius
 
 """
 function filtergrids(rows::Integer, cols::Integer)
@@ -100,8 +101,9 @@ function filtergrids(sze::Tuple{Integer,Integer})
 end
 
 #--------------------------------------------------------------------
+# filtergrid
 """
-filtergrid - Generates grid for constructing frequency domain filters
+Generate grid for constructing frequency domain filters.
 ```
 Usage:  f = filtergrid(rows, cols)
         f = filtergrid((rows, cols))
@@ -113,9 +115,9 @@ Returns:             f - Grid of size (rows, cols) containing normalised
                          shifted so that 0 frequency is at f[1,1]
 
 ```
-Used by phasecongmono, phasecong3, etc etc
+Used by [`phasecongmono`](@ref), [`phasecong3`](@ref), etc etc
 
-See also: filtergrids   if you also want normalized frequency grids in
+See also: [`filtergrids`](@ref)   if you also want normalized frequency grids in
           the x and y directions as well.
 """
 function filtergrid(rows::Integer, cols::Integer)
@@ -148,8 +150,9 @@ function filtergrid(sze::Tuple{Integer,Integer})
 end
 
 #--------------------------------------------------------------------
+# monogenicfilters
 """
-monogenicfilters - Generate monogenic filter grids
+Generate monogenic filter grids.
 
 ```
 Usage: (H1, H2, f) = monogenicfilters(rows, cols)
@@ -169,7 +172,7 @@ where:
 Note that H1, H2, and f and quadrant shifted to that the 0 frequency
 value is at coordinate [1,1].
 
-See also: packedmonogenicfilters
+See also: [`packedmonogenicfilters`](@ref)
 """
 function monogenicfilters(rows::Integer, cols::Integer)
 
@@ -191,8 +194,9 @@ function monogenicfilters(sze::Tuple{Integer,Integer})
 end
 
 #--------------------------------------------------------------------
+# packedmonogenicfilters
 """
-packedmonogenicfilters - Generate packed monogenic filter grid
+Monogenic filter where both filters are packed in the one Complex grid.
 
 ```
 Usage: (H, f) = packedmonogenicfilters(rows, cols)
@@ -220,14 +224,12 @@ to the convolution with H1 and the imaginary part with H2.  This
 allows the two convolutions to be done as one in the frequency domain,
 saving time and memory.
 
-```
 Note that H and f and quadrant shifted to that the 0 frequency
 value is at coordinate [1,1].
 
-See also: monogenicfilters
+See also: [`monogenicfilters`](@ref)
 """
 function packedmonogenicfilters(rows::Integer, cols::Integer)
-
     (f, fx, fy) = filtergrids(rows, cols)
     f[1,1] = 1  # Set DC value to 1 to avoid divide by zero
 
@@ -242,12 +244,13 @@ end
 
 # Tuple version
 function packedmonogenicfilters(sze::Tuple{Integer,Integer})
-    return monogenicfilters(sze[1], sze[2])
+    return packedmonogenicfilters(sze[1], sze[2])
 end
 
 #--------------------------------------------------------------------
+# lowpassfilter
 """
-lowpassfilter - Constructs a low-pass butterworth filter.
+Construct a low-pass Butterworth filter.
 ```
 Usage: f = lowpassfilter(sze, cutoff, n)
 
@@ -265,7 +268,7 @@ where: sze    is a two element tuple specifying the size of filter
 ```
 The frequency origin of the returned filter is at the corners.
 
-See also: highpassfilter, highboostfilter, bandpassfilter
+See also: [`highpassfilter`](@ref), [`highboostfilter`](@ref), [`bandpassfilter`](@ref)
 """
 function lowpassfilter(sze::Tuple{Integer, Integer}, cutoff::Real, n::Integer)
 
@@ -282,8 +285,9 @@ function lowpassfilter(f::Real, cutoff::Real, n::Integer)
     return 1.0 / (1.0 + (f / cutoff)^(2*n))
 end
 #--------------------------------------------------------------------
+# bandpassfilter
 """
-bandpassfilter - Constructs a band-pass butterworth filter
+Construct a band-pass Butterworth filter.
 ```
 Usage: f = bandpassfilter(sze, cutin, cutoff, n)
 
@@ -297,7 +301,7 @@ Returns:
                f - Frequency domain filter of size==sze, the frequency
                    origin is at the corners.
 ```
-See also: lowpassfilter, highpassfilter, highboostfilter
+See also: [`lowpassfilter`](@ref), [`highpassfilter`](@ref), [`highboostfilter`](@ref)
 """
 function bandpassfilter(sze::Tuple{Integer, Integer}, cutin::Real, cutoff::Real, n::Integer)
 
@@ -313,8 +317,9 @@ function bandpassfilter(sze::Tuple{Integer, Integer}, cutin::Real, cutoff::Real,
 end
 
 #--------------------------------------------------------------------
+# highboostfilter
 """
-highboostfilter - Constructs a high-boost Butterworth filter.
+Construct a high-boost Butterworth filter.
 ```
 Usage: f = highboostfilter(sze, cutoff, n, boost)
 
@@ -331,7 +336,7 @@ Returns:
            f - Frequency domain filter of size==sze, the frequency
                origin is at the corners.
 ```
-See also: lowpassfilter, highpassfilter, bandpassfilter
+See also: [`lowpassfilter`](@ref), [`highpassfilter`](@ref), [`bandpassfilter`](@ref)
 """
 function highboostfilter(sze::Tuple{Integer, Integer}, cutoff::Real, n::Integer, boost::Real)
 
@@ -349,8 +354,9 @@ function highboostfilter(sze::Tuple{Integer, Integer}, cutoff::Real, n::Integer,
 end
 
 #--------------------------------------------------------------------
+# highpassfilter
 """
-highpassfilter  - Constructs a high-pass butterworth filter.
+Construct a high-pass Butterworth filter.
 ```
 Usage: f = highpassfilter(sze, cutoff, n)
 
@@ -363,7 +369,7 @@ Returns:
            f - Frequency domain filter of size==sze, the frequency
                origin is at the corners.
 ```
-See also: lowpassfilter, highboostfilter, bandpassfilter
+See also: [`lowpassfilter`](@ref), [`highboostfilter`](@ref), [`bandpassfilter`](@ref)
 """
 function highpassfilter(sze::Tuple{Integer, Integer}, cutoff::Real, n::Integer)
 
@@ -374,8 +380,9 @@ function highpassfilter(sze::Tuple{Integer, Integer}, cutoff::Real, n::Integer)
     return 1.0 .- lowpassfilter(sze, cutoff, n)
 end
 #--------------------------------------------------------------------
+# loggabor
 """
-loggabor - The logarithmic Gabor function in the frequency domain
+The logarithmic Gabor function in the frequency domain.
 
 ```
 Usage: v = loggabor(f::Real, fo::Real, sigmaOnf::Real)
@@ -401,9 +408,23 @@ function loggabor(f::Real, fo::Real, sigmaOnf::Real)
 end
 
 #-------------------------------------------------------------
+# gridangles
+"""
+Generate arrays of filter grid angles.
+```
+Usage: (sintheta, costheta) = gridangles(freq, fx, fy)
 
-function gridangles(freq::Array{T1,2},
-                    fx::Array{T2,2}, fy::Array{T3,2}) where {T1 <: Real, T2 <: Real, T3 <: Real}
+Arguments: freq, fx, fy - The output of filtergrids()
+
+Returns:       sintheta - The sine and cosine of the angles in the filtergrid
+               costheta
+
+```
+See also [`filtergrids`](@ref)
+
+"""
+function gridangles(freq::AbstractArray{T1,2},
+                    fx::AbstractArray{T2,2}, fy::AbstractArray{T3,2}) where {T1 <: Real, T2 <: Real, T3 <: Real}
 
     freq[1,1] = 1         # Avoid divide by 0
     sintheta = fx./freq   # sine and cosine of filter grid angles
@@ -414,11 +435,9 @@ function gridangles(freq::Array{T1,2},
 end
 
 #--------------------------------------------------------------------
+# cosineangularfilter
 """
-cosineangularfilter
-
-Generate orientation selective filter in the frequency domain using an
-angular cosine windowing function
+Orientation selective frequency domain filter with cosine windowing function.
 
 ```
 Usage: filter = cosineangularfilter(angl, wavelen, sintheta, costheta)
@@ -428,7 +447,7 @@ Arguments:
             wavelen - Wavelength of the angular cosine window function.
  sintheta, costheta - Grids as returned by gridangles()
 ```
-See also: gaussianangularfilter, filtergrids
+See also: [`gaussianangularfilter`](@ref), [`filtergrids`](@ref)
 """
 function cosineangularfilter(angl::Real, wavelen::Real,
                              sintheta::Array{T1,2}, costheta::Array{T2,2}) where {T1 <: Real, T2 <: Real}
@@ -460,11 +479,9 @@ function cosineangularfilter(angl::Real, wavelen::Real,
 end
 
 #--------------------------------------------------------------------
+# gaussianangularfilter
 """
-gaussianangularfilter
-
-Generate orientation selective filter in the frequency domain using an
-angular Gaussian windowing function
+Orientation selective frequency domain filter with Gaussian windowing function.
 
 ```
 Usage: filter = gaussianangularfilter(angl, thetaSigma, sintheta, costheta)
@@ -474,7 +491,8 @@ Arguments:
          thetasigma - Standard deviation of angular Gaussian window function.
  sintheta, costheta - Grids as returned by gridangles()
 ```
-See also: cosineangularfilter, gridangles, filtergrids
+
+See also: [`cosineangularfilter`](@ref), [`gridangles`](@ref), [`filtergrids`](@ref)
 """
 function gaussianangularfilter(angl::Real, thetaSigma::Real,
                                sintheta::Array{T1,2}, costheta::Array{T2,2}) where {T1 <: Real, T2 <: Real}
@@ -626,8 +644,9 @@ end
 =#
 
 #--------------------------------------------------------------------
+#  perfft2
 """
-perfft2 -  2D Fourier transform of Moisan's periodic image component
+2D Fourier transform of Moisan's periodic image component.
 ```
 Usage: (P, S, p, s) = perfft2(img)
 
@@ -640,7 +659,7 @@ Returns:    P - 2D fft of periodic image component
 Moisan's "Periodic plus Smooth Image Decomposition" decomposes an image
 into two components
 
-        `img = p + s`
+        img = p + s
 
 where s is the 'smooth' component with mean 0 and p is the 'periodic'
 component which has no sharp discontinuities when one moves cyclically
@@ -654,7 +673,7 @@ but avoids periodization artifacts.
 The typical use of this function is to obtain a 'periodic only' fft of an
 image
 
-     `P = perfft2(img)`
+      P = perfft2(img)
 
 Displaying the amplitude spectrum of P will yield a clean spectrum without the
 typical vertical-horizontal 'cross' arising from the image boundaries that you
@@ -717,8 +736,9 @@ function perfft2(img::Array{T,2}) where T <: Real
 end
 
 #----------------------------------------------------------------------
+# geoseries
 """
-geoseries - Generate geometric series
+Generate geometric series.
 
 Useful for generating geometrically scaled wavelengths for specifying
 filter banks.
@@ -737,8 +757,9 @@ Arguments: (s1, sn) - Tuple specifying the 1st and last values
                   n - The desired number of elements in the series.
 ```
 
-Example: s = geoseries(0.5, 2, 4)
+Example:
 ```
+      s = geoseries(0.5, 2, 4)
       s =  [0.5000,    1.0000,    2.0000,    4.0000]
 ```
  Alternatively obtain the same series using
