@@ -11,3 +11,7 @@ makedocs(
         "functions.md"        
     ]
 )
+
+deploydocs(
+    repo = "github.com/peterkovesi/ImagePhaseCongruency.jl.git",
+)
