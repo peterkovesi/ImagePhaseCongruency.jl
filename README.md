@@ -1,6 +1,7 @@
 ImagePhaseCongruency
 =======================
 
+[![Build Status](https://travis-ci.org/peterkovesi/ImagePhaseCongruency.jl.svg?branch=master)](https://travis-ci.org/peterkovesi/ImagePhaseCongruency.jl)
 
 ----------------------------------------------
 
