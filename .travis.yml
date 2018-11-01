@@ -1,11 +1,11 @@
 language: julia
 os:
-  - linux
+#  - linux
   - osx
 julia:
   - 0.7
-  - 1.0
-  - nightly
+#  - 1.0
+#  - nightly
 notifications:
   email: false
 git:
@@ -14,7 +14,7 @@ matrix:
   allow_failures:
   - julia: nightly
 script:
-  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("ImagePhaseCongruency"); Pkg.test("ImagePhaseCongruency"; coverage=true)'
+  - julia -e 'using Pkg; Pkg.add(pwd()); Pkg.build("ImagePhaseCongruency"); Pkg.test("ImagePhaseCongruency"; coverage=true)'
 jobs:
   include:
     - stage: "Documentation"
