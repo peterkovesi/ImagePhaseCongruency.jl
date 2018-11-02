@@ -21,7 +21,12 @@ PK August 2015
 import Images
 
 export replacenan, fillnan
-export hysthresh
+export hysthresh, imgnormalize
+
+# Note the following two functions are in ImageProjective Geometry but are
+# duplicated here to minimise dependencies.
+export imgnormalise, histtruncate 
+
 
 #----------------------------------------------------------------------
 # fillnan
@@ -139,3 +144,137 @@ function hysthresh(img::AbstractArray{T0,2}, T1::Real, T2::Real) where T0 <: Rea
     return bw
 end
 
+
+#----------------------------------------------------------------------
+"""
+imgnormalise/imgnormalize - Normalises image values to 0-1, or to desired mean and variance
+
+```
+Usage 1:      nimg = imgnormalise(img)
+```
+Offsets and rescales image so that the minimum value is 0
+and the maximum value is 1.  
+
+```
+Usage 2:      nimg = imgnormalise(img, reqmean, reqvar)
+
+Arguments:  img     - A grey-level input image.
+            reqmean - The required mean value of the image.
+            reqvar  - The required variance of the image.
+```
+Offsets and rescales image so that nimg has mean reqmean and variance
+reqvar.  
+"""
+function imgnormalise(img::Array) # Normalise 0 - 1
+    n = img .- minimum(img)
+    return n = n/maximum(n)
+end
+
+# Normalise to desired mean and variance
+function imgnormalise(img::Array, reqmean::Real, reqvar::Real)
+    n = img .- mean(img)
+    n /= std(img)      # Zero mean, unit std dev
+    return n = reqmean .+ n*sqrt(reqvar)
+end
+
+# For those who spell normalise with a 'z'
+"""
+imgnormalize - Normalizes image values to 0-1, or to desired mean and variance
+```
+Usage 1:      nimg = imgnormalize(img)
+```
+Offsets and rescales image so that the minimum value is 0
+and the maximum value is 1.  
+```
+Usage 2:      nimg = imgnormalize(img, reqmean, reqvar)
+
+Arguments:  img     - A grey-level input image.
+            reqmean - The required mean value of the image.
+            reqvar  - The required variance of the image.
+```
+Offsets and rescales image so that nimg has mean reqmean and variance
+reqvar.  
+"""
+function imgnormalize(img::Array) 
+    return imgnormalise(img)
+end
+
+function imgnormalize(img::Array, reqmean::Real, reqvar::Real)
+    return imgnormalise(img, reqmean, reqvar)
+end
+
+#----------------------------------------------------------------------
+"""
+histtruncate - Truncates ends of an image histogram.
+
+Function truncates a specified percentage of the lower and
+upper ends of an image histogram.
+
+This operation allows grey levels to be distributed across
+the primary part of the histogram.  This solves the problem
+when one has, say, a few very bright values in the image which
+have the overall effect of darkening the rest of the image after
+rescaling.
+
+```
+Usage: 
+1)   newimg = histtruncate(img, lHistCut, uHistCut)
+2)   newimg = histtruncate(img, HistCut)
+
+Arguments:
+ Usage 1)
+   img         -  Image to be processed.
+   lHistCut    -  Percentage of the lower end of the histogram
+                  to saturate.
+   uHistCut    -  Percentage of the upper end of the histogram
+                  to saturate.  If omitted or empty defaults to the value
+                  for lHistCut.
+ Usage 2)
+   HistCut     -  Percentage of upper and lower ends of the histogram to cut.
+
+Returns:
+   newimg      -  Image with values clipped at the specified histogram
+                  fraction values.  If the input image was colour the
+                  lightness values are clipped and stretched to the range
+                  0-1.  If the input image is greyscale no stretching is
+                  applied. You may want to use imgnormalise() to achieve this.
+```
+See also: imgnormalise()
+"""
+function  histtruncate(img::Array, lHistCut::Real, uHistCut::Real)
+    
+    if lHistCut < 0 || lHistCut > 100 || uHistCut < 0 || uHistCut > 100
+	error("Histogram truncation values must be between 0 and 100")
+    end
+    
+    if ndims(img) > 2
+	error("histtruncate only defined for grey scale images")
+    end
+
+    newimg = copy(img)    
+    sortv = sort(newimg[:])   # Generate a sorted array of pixel values.
+
+    # Any NaN values will end up at the end of the sorted list. We
+    # need to ignore these.
+#    N = sum(.!isnan.(sortv))  # Number of non NaN values. v0.6
+    N = sum(broadcast(!,isnan.(sortv)))  # compatibity for v0.5 and v0.6
+    
+    # Compute indicies corresponding to specified upper and lower fractions
+    # of the histogram.
+    lind = floor(Int, 1 + N*lHistCut/100)
+    hind =  ceil(Int, N - N*uHistCut/100)
+
+    low_val  = sortv[lind]
+    high_val = sortv[hind]
+
+    # Adjust image
+    newimg[newimg .< low_val] .= low_val
+    newimg[newimg .> high_val] .= high_val
+    
+    return newimg
+end
+
+
+function  histtruncate(img::Array, HistCut::Real)
+    return histtruncate(img, HistCut, HistCut)
+end
