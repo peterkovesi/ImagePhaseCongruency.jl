@@ -1,7 +1,7 @@
 ImagePhaseCongruency
 =======================
 
-[![Build Status](https://travis-ci.com/peterkovesi/ImagePhaseCongruency.jl.svg?branch=master)](https://travis-ci.com/peterkovesi/ImagePhaseCongruency.jl)
+[![Build Status](https://travis-ci.com/peterkovesi/ImagePhaseCongruency.svg?branch=master)](https://travis-ci.com/peterkovesi/ImagePhaseCongruency)
 
 ----------------------------------------------
 
