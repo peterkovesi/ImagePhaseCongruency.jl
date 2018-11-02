@@ -21,7 +21,9 @@ jobs:
       julia: 1.0
       os: linux
       script:
-        - julia --project=docs/ -e 'using Pkg; import Pkg; Pkg.add("Documenter"); Pkg.instantiate();
+        - julia --project=docs/ -e 'using Pkg; import Pkg; Pkg.add("Documenter");
+	                            Pkg.add("Images"); Pkg.add("TestImages");
+	                            Pkg.instantiate();
                                     Pkg.develop(PackageSpec(path=pwd()))'
         - julia --project=docs/ docs/make.jl
       after_success: skip
