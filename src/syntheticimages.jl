@@ -35,8 +35,6 @@ PK August 2015   Original porting from MATLAB to Julia
 
 ---------------------------------------------------------------------=#
 
-using ImageProjectiveGeometry
-
 export step2line, circsine, starsine, noiseonf
 export nophase, quantizephase, swapphase
 
