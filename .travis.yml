@@ -14,7 +14,7 @@ matrix:
   allow_failures:
   - julia: nightly
 script:
-  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/peterkovesi/ImagePhaseCongruency.jl")); Pkg.build("ImagePhaseCongruency"); Pkg.test("ImagePhaseCongruency"; coverage=true)'
+  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("ImagePhaseCongruency"); Pkg.test("ImagePhaseCongruency"; coverage=true)'
 jobs:
   include:
     - stage: "Documentation"
