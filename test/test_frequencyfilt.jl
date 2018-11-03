@@ -7,9 +7,14 @@ tries to run then all to make sure that they at least run
 Set disp = true to display images for visual verification
 =#
 
-using ImagePhaseCongruency, Test, TestImages, PyPlot, AbstractFFTs
-
 disp = false
+
+using ImagePhaseCongruency, Test, TestImages, AbstractFFTs
+
+if disp
+    using PyPlot
+end
+
 
 println("Testing frequencyfilt...")
 
