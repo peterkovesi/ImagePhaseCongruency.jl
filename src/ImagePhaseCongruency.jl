@@ -45,8 +45,6 @@ Peter Kovesi
 """
 module ImagePhaseCongruency
 
-using Images, TestImages # Load these so that Documentor can build examples.md
-
 include("phasecongruency.jl")
 include("frequencyfilt.jl")
 include("syntheticimages.jl")

@@ -4,9 +4,13 @@ Testing of utilities.jl
 
 =#
 
-using ImagePhaseCongruency, Test, TestImages, PyPlot
-
 disp = false
+
+using ImagePhaseCongruency, Test, TestImages
+
+if disp
+    using PyPlot
+end
 
 println("Testing utilities.jl...")
 
