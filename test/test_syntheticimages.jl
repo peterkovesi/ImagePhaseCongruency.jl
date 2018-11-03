@@ -7,11 +7,15 @@ runs then all to make sure that they at least run
 Set 'disp' = true to display the images
 =#
 
-using ImagePhaseCongruency, TestImages, PyPlot, Printf
-
 disp = false
 
-@printf("Testing syntheticimages...\n")
+using ImagePhaseCongruency, TestImages
+
+if disp
+    using PyPlot
+end
+
+println("Testing syntheticimages...")
 
 function mypause()
     println("Hit return to continue ")
