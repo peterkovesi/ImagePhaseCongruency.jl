@@ -15,8 +15,9 @@ matrix:
   - julia: nightly
 script:
 #  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("ImagePhaseCongruency"); Pkg.test("ImagePhaseCongruency"; coverage=true)'
-  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/peterkovesi/ImagePhaseCongruency.jl")); Pkg.build("ImagePhaseCongruency"); Pkg.test("ImagePhaseCongruency"; coverage=true)'
-
+#  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/peterkovesi/ImagePhaseCongruency.jl")); Pkg.build("ImagePhaseCongruency"); Pkg.test("ImagePhaseCongruency"; coverage=true)'
+  - julia --color=yes -e 'using Pkg; Pkg.build()'
+  - julia --check-bounds=yes --color=yes -e 'using Pkg; Pkg.test(coverage=true)'
 #jobs:
 #  include:
 #    - stage: "Documentation"
