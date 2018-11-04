@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · ImagePhaseCongruency</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><a href="../index.html"><img class="logo" src="../assets/logo.png" alt="ImagePhaseCongruency logo"/></a><h1>ImagePhaseCongruency</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">ImagePhaseCongruency</a></li><li class="current"><a class="toctext" href>Examples</a><ul class="internal"><li><a class="toctext" href="#Phase-Congruency-1">Phase Congruency</a></li><li><a class="toctext" href="#Phase-Symmetry-1">Phase Symmetry</a></li><li><a class="toctext" href="#Phase-Preserving-Dynamic-Range-Compression-1">Phase Preserving Dynamic Range Compression</a></li><li><a class="toctext" href="#Phase-Preserving-Denoising-1">Phase Preserving Denoising</a></li><li><a class="toctext" href="#Phase-Amplitude-Swapping-1">Phase-Amplitude Swapping</a></li><li><a class="toctext" href="#Phase-Quantization-1">Phase Quantization</a></li><li><a class="toctext" href="#Test-Images-1">Test Images</a></li><li><a class="toctext" href="#Fourier-transform-of-Moisan&#39;s-periodic-image-component-1">Fourier transform of Moisan&#39;s periodic image component</a></li></ul></li><li><a class="toctext" href="../functions/">Function Reference</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Examples</a></li></ul><a class="edit-page" href="https://github.com/peterkovesi/ImagePhaseCongruency.jl/blob/master/docs/src/examples.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Examples</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Examples-1" href="#Examples-1">Examples</a></h1><h2><a class="nav-anchor" id="Phase-Congruency-1" href="#Phase-Congruency-1">Phase Congruency</a></h2><p>Phase congruency marks all classes of features from steps to lines and is a dimensionless quantity that ranges from 0 to 1.  This allows fixed thresholds to be used over wide classes of images.</p><pre><code class="language-">using ImagePhaseCongruency, Images, TestImages, PyPlot
+
+img = testimage(&quot;lena_gray_512&quot;)
+img = Float64.(img)
+set_cmap(PyPlot.ColorMap(&quot;gray&quot;))
+imshow(img); axis(&quot;off&quot;)
+save(&quot;lena.png&quot;, img) # hide
+
+(pc, or, ft, T) = 
+         phasecongmono(img; nscale=4, minwavelength=3, mult=2, 
+                        sigmaonf=0.55, k=3, cutoff=0.5, g=10, 
+                        deviationgain=1.5, noisemethod=-1)
+
+imshow(pc); axis(&quot;off&quot;)
+save(&quot;lena_pc.png&quot;, imadjustintensity(pc)) # hide
+nonmax = thin_edges_nonmaxsup(pc, or)
+imshow(nonmax); axis(&quot;off&quot;)
+save(&quot;lena_nm.png&quot;, imadjustintensity(nonmax)) # hide
+# Hysteresis threshold between Phase Congruency of 0.1 and 0.2
+bw = hysthresh(nonmax, 0.1, 0.2) 
+imshow(bw); axis(&quot;off&quot;)
+save(&quot;lena_bw.png&quot;, bw) # hide</code></pre><table><tr><th>Lena</th><th>Phase Congruency</th></tr><tr><td><img src="lena.png" alt/></td><td><img src="lena_pc.png" alt/></td></tr><tr><td><strong>Non-maximal suppression</strong></td><td><strong>Hysteresis thresholded</strong></td></tr><tr><td><img src="lena_nm.png" alt/></td><td><img src="lena_bw.png" alt/></td></tr></table><p>Use of the function <code>phasecong3()</code> allows corner points to be detected as well. These corner points are a subset of the edge image and, unlike other corner detectors, their location is precise and stable over different scales.</p><pre><code class="language-">using ImagePhaseCongruency, Images, TestImages, PyPlot
+
+img = testimage(&quot;lena_gray_512&quot;)
+set_cmap(PyPlot.ColorMap(&quot;gray&quot;))
+(M, m) = phasecong3(img)
+imshow(M); axis(&quot;off&quot;)  # Edge image
+save(&quot;lena_Me.png&quot;, imadjustintensity(M)) # hide
+imshow(m); axis(&quot;off&quot;)  # &#39;Corner&#39; image
+save(&quot;lena_mc.png&quot;, imadjustintensity(m)) # hide</code></pre><table><tr><th>Lena edges</th><th>Lena corners</th></tr><tr><td><img src="lena_Me.png" alt/></td><td><img src="lena_mc.png" alt/></td></tr></table><h2><a class="nav-anchor" id="Phase-Symmetry-1" href="#Phase-Symmetry-1">Phase Symmetry</a></h2><p>Phase symmetry responds well to line like features and circular objects.  The number of filter scales will affect the scale of features that are marked. Phase symmetry marks features independently of contrast (a bright circle is not more symmetric than a grey circle) and is a dimensionless quantity between 0 and 1.  However this may not be what one desires in which case the symmetry energy may be of greater interest.</p><pre><code class="language-">using ImagePhaseCongruency, Images, TestImages, PyPlot
+
+img = Float64.(Gray.(testimage(&quot;blobs&quot;)))
+
+set_cmap(PyPlot.ColorMap(&quot;gray&quot;))
+imshow(img); axis(&quot;off&quot;)
+save(&quot;blobs.png&quot;, img)  #hide
+
+# Detect regions of bright symmetry (polarity = 1)
+(phaseSym, symmetryEnergy, T) = phasesymmono(img; nscale=5, polarity=1)
+imshow(phaseSym); axis(&quot;off&quot;)
+save(&quot;blobs_sym1.png&quot;, phaseSym) #hide
+
+# Detect regions of dark symmetry (polarity = -1)
+(phaseSym, symmetryEnergy, T) = phasesymmono(img; nscale=5, polarity=-1)
+imshow(phaseSym); axis(&quot;off&quot;)
+save(&quot;blobs_sym-1.png&quot;, phaseSym) #hide
+</code></pre><table><tr><th>Blobs</th><th>.</th></tr><tr><td><img src="blobs.png" alt/></td><td></td></tr><tr><td><strong>Bright symmetry</strong></td><td><strong>Dark Symmetry</strong></td></tr><tr><td><img src="blobs_sym1.png" alt/></td><td><img src="blobs_sym-1.png" alt/></td></tr></table><h2><a class="nav-anchor" id="Phase-Preserving-Dynamic-Range-Compression-1" href="#Phase-Preserving-Dynamic-Range-Compression-1">Phase Preserving Dynamic Range Compression</a></h2><p>An example using the 16 bit M51 image.  Phase preserving dynamic range compression allows the scale of analysis to be controlled.  Here we process the image at wavelengths up to 50 pixels and up to 200 pixels.  Longer wavelengths allow larger structures to be seen. Small wavelengths allow fine structures to be seen.  Note the image size is (510, 320).</p><pre><code class="language-">using ImagePhaseCongruency, TestImages, Images, PyPlot
+
+set_cmap(PyPlot.ColorMap(&quot;gray&quot;))
+
+img = Float64.(testimage(&quot;m51&quot;))
+imshow(img)
+save(&quot;m51.png&quot;, imadjustintensity(img)) #hide
+
+# Histogram equalization for reference (with a very large number of bins!)
+imshow(histeq(img, 100000))
+save(&quot;m51histeq.png&quot;, histeq(img, 100000)) #hide
+
+# Phase presserving dynamic range compression at cutoff wavelengths of 50 and
+# 200 pixels.  Note we scale the image because its raw values are between 0 and
+# 1, see the help information for ppdrc() for details.
+scale = 1e4
+imshow(ppdrc(img*scale, 50))
+save(&quot;m51ppdrc50.png&quot;, imadjustintensity(ppdrc(img*scale, 50))) #hide
+imshow(ppdrc(img*scale, 200))
+save(&quot;m51ppdrc200.png&quot;, imadjustintensity(ppdrc(img*scale, 200))) #hide</code></pre><table><tr><th>M51</th><th>Histogram equalized (100000 bins)</th></tr><tr><td><img src="m51.png" alt/></td><td><img src="m51histeq.png" alt/></td></tr><tr><td><strong>ppdrc: wavelength cutoff 50 pixels</strong></td><td><strong>ppdrc: wavelength cutoff 200 pixels</strong></td></tr><tr><td><img src="m51ppdrc50.png" alt/></td><td><img src="m51ppdrc200.png" alt/></td></tr></table><h2><a class="nav-anchor" id="Phase-Preserving-Denoising-1" href="#Phase-Preserving-Denoising-1">Phase Preserving Denoising</a></h2><pre><code class="language-">using ImagePhaseCongruency, TestImages, Images, PyPlot
+
+img = Float64.(testimage(&quot;lena_gray_512&quot;))  # Values in the range 0 to 1
+img .+= 0.25 * randn(size(img))             # Add noise with standard deviation of 0.25
+
+cleanimg = ppdenoise(img,  nscale = 6, norient = 6, mult = 2.5, minwavelength = 2,
+                     sigmaonf = 0.55, dthetaonsigma = 1.0, k = 3, softness = 1.0)
+
+set_cmap(PyPlot.ColorMap(&quot;gray&quot;))
+imshow(img)
+save(&quot;lenaplusnoise.png&quot;, imadjustintensity(img)) #hide
+imshow(cleanimg)
+save(&quot;lenadenoised.png&quot;, imadjustintensity(cleanimg)) #hide</code></pre><table><tr><th>Lena + noise</th><th>Lena denoised</th></tr><tr><td><img src="lenaplusnoise.png" alt/></td><td><img src="lenadenoised.png" alt/></td></tr></table><h2><a class="nav-anchor" id="Phase-Amplitude-Swapping-1" href="#Phase-Amplitude-Swapping-1">Phase-Amplitude Swapping</a></h2><p>A demonstration of the importance of phase information in images. Given two images<code>swapphase()</code> takes their Fourier transforms and constructs two new, synthetic, images formed from the swapped phase and amplitude imformation.  In general it is the phase information that dominates.  However, for textures where the amplitude spectra can be concentrated in a limited set of locations, the reverse can apply.</p><p>See <a href="https://ieeexplore.ieee.org/document/1456290">Oppenheim and Lim&#39;s paper &quot;The importance of phase in signals&quot;. Proceedings of the IEEE. Volume: 69 , Issue: 5 , May 1981</a></p><pre><code class="language-">using ImagePhaseCongruency, Images, TestImages, PyPlot
+
+img1 = Float64.(testimage(&quot;lena_gray_512&quot;))
+img2 = Float64.(testimage(&quot;mandril_gray&quot;))
+
+(newimg1, newimg2) = swapphase(img1, img2)
+
+set_cmap(PyPlot.ColorMap(&quot;gray&quot;))
+imshow(newimg1)
+save(&quot;phaselenaampmandril.png&quot;, imadjustintensity(newimg1)) #hide
+imshow(newimg2)
+save(&quot;amplenaphasemandril.png&quot;, imadjustintensity(newimg2)) #hide</code></pre><table><tr><th>Phase of Lena, amplitude of Mandril</th><th>Amplitude of Lena, phase of Mandril</th></tr><tr><td><img src="phaselenaampmandril.png" alt/></td><td><img src="amplenaphasemandril.png" alt/></td></tr></table><h2><a class="nav-anchor" id="Phase-Quantization-1" href="#Phase-Quantization-1">Phase Quantization</a></h2><p>Phase values in an image are important.  However, despite this, phase can be quantized very heavily with little perceptual loss.  It can be quantized to a few as four levels, or even three.  Quantizing to two levels still gives an image that can be interpreted.</p><pre><code class="language-">using ImagePhaseCongruency, Images, TestImages, PyPlot
+
+lena = testimage(&quot;lena_gray_512&quot;)
+lena = Float64.(lena)
+
+set_cmap(PyPlot.ColorMap(&quot;gray&quot;))
+
+imshow(quantizephase(lena,8))
+save(&quot;lena8.png&quot;, imadjustintensity(quantizephase(lena,8))) #hide
+imshow(quantizephase(lena,4))
+save(&quot;lena4.png&quot;, imadjustintensity(quantizephase(lena,4))) #hide
+imshow(quantizephase(lena,3))
+save(&quot;lena3.png&quot;, imadjustintensity(quantizephase(lena,3))) #hide
+imshow(quantizephase(lena,2))
+save(&quot;lena2.png&quot;, imadjustintensity(quantizephase(lena,2))) #hide
+</code></pre><table><tr><th>Lena: 8 phase values</th><th>Lena: 4 phase values</th></tr><tr><td><img src="lena8.png" alt/></td><td><img src="lena4.png" alt/></td></tr><tr><td><strong>Lena: 3 phase values</strong></td><td><strong>Lena: 2 phase values</strong></td></tr><tr><td><img src="lena3.png" alt/></td><td><img src="lena2.png" alt/></td></tr></table><h2><a class="nav-anchor" id="Test-Images-1" href="#Test-Images-1">Test Images</a></h2><p>The <code>step2line()</code> function generates a phase congruent test image where angle at which the congruency occurs is interpolated from 0 at the top of the image to pi/2 at the bottom. This produces an interpolation of feature type from step edge to line.  The point being that phase congruency at any angle produces a feature and the angle at which the congruency occurs defines the feature type. Gradient based edge detectors will only correctly mark the step-like feature towards the top of the image and incorrectly mark two features towards the bottom of the image whereas phase congruency will correctly mark a single feature from top to bottom.  In general, natural images contain a roughly uniform distribution of the full continuum of feature types from step to line.</p><pre><code class="language-">using ImagePhaseCongruency, Images, PyPlot
+
+set_cmap(PyPlot.ColorMap(&quot;gray&quot;))
+
+imshow(step2line(ampexponent = -1))
+save(&quot;step2line-1.png&quot;, imadjustintensity(step2line(ampexponent = -1))) #hide
+imshow(step2line(ampexponent = -1.5))  # Note the softer features
+save(&quot;step2line-15.png&quot;, imadjustintensity(step2line(ampexponent = -1.5))) #hide
+
+# Compute phase congruency on the step2line image using default parameters
+(pc,) = phasecongmono(step2line(ampexponent = -1))
+imshow(pc)
+save(&quot;step2line_pc.png&quot;, imadjustintensity(pc)) #hide
+
+# Compute gradient magnitude of the step2line image
+fimg = imfilter(step2line(ampexponent = -1), KernelFactors.gaussian((2, 2)))
+(gx, gy) = imgradients(fimg, KernelFactors.ando3)
+imshow(sqrt.(gx.^2 + gy.^2)) # Note the doubled responses at the bottom on the image.
+save(&quot;step2line_gr.png&quot;, imadjustintensity(sqrt.(gx.^2 + gy.^2))) #hide</code></pre><table><tr><th>step2line ampexponent = -1</th><th>step2line ampexponent = -1.5</th></tr><tr><td><img src="step2line-1.png" alt/></td><td><img src="step2line-15.png" alt/></td></tr><tr><td><strong>Phase Congruency on step2line ampexp=-1</strong></td><td><strong>Gradient magnitude of step2line: ampexp=-1</strong></td></tr><tr><td><img src="step2line_pc.png" alt/></td><td><img src="step2line_gr.png" alt/></td></tr></table><pre><code class="language-">using ImagePhaseCongruency, Images, PyPlot
+
+# Circular features at a phase congruent angle of pi/4
+# and an amplitude decay exponent of 1.5
+imshow(circsine(offset = pi/4, ampexponent = -1.5))
+save(&quot;circsine.png&quot;, imadjustintensity(circsine(offset = pi/4, ampexponent = -1.5))) #hide
+
+# Radial features at a phase congruent angle of pi/2
+# and an amplitude decay exponent of 2
+imshow(starsine(offset = pi/2, ampexponent = -2))
+save(&quot;starsine.png&quot;, imadjustintensity(starsine(offset = pi/2, ampexponent = -2))) #hide
+
+# Noise images with amplitude decay exponents of 1.5 and 2.5
+imshow(noiseonf(512, 1.5))
+save(&quot;noiseonf_15.png&quot;, imadjustintensity(noiseonf(512, 1.5))) #hide
+imshow(noiseonf(512, 2.5))
+save(&quot;noiseonf_25.png&quot;, imadjustintensity(noiseonf(512, 2.5))) #hide</code></pre><table><tr><th>circsine</th><th>starsine</th></tr><tr><td><img src="circsine.png" alt/></td><td><img src="starsine.png" alt/></td></tr><tr><td><strong>noiseonf: p=1.5</strong></td><td><strong>noiseonf: p=2.5</strong></td></tr><tr><td><img src="noiseonf_15.png" alt/></td><td><img src="noiseonf_25.png" alt/></td></tr></table><h2><a class="nav-anchor" id="Fourier-transform-of-Moisan&#39;s-periodic-image-component-1" href="#Fourier-transform-of-Moisan&#39;s-periodic-image-component-1">Fourier transform of Moisan&#39;s periodic image component</a></h2><p>The function <code>perfft2()</code> implements Moisan&#39;s &quot;Periodic plus Smooth Image Decomposition&quot; which decomposes an image into two components</p><pre><code class="language-none">  img = p + s</code></pre><p>where <code>s</code> is the &#39;smooth&#39; component with mean 0 and <code>p</code> is the &#39;periodic&#39; component which has no sharp discontinuities when one moves cyclically across the image boundaries.</p><p>This decomposition is very useful when one wants to obtain an FFT of an image with minimal artifacts introduced from the boundary discontinuities. The image <code>p</code> gathers most of the image information but avoids periodization artifacts.</p><p>Reference: L. Moisan, &quot;Periodic plus Smooth Image Decomposition&quot;, Journal of Mathematical Imaging and Vision, vol 39:2, pp. 161-179, 2011.</p><pre><code class="language-">using ImagePhaseCongruency, TestImages, Images, PyPlot, FFTW
+
+img = Float64.(testimage(&quot;lena_gray_512&quot;))
+
+IMG = fft(img)               # &#39;Standard&#39; fft of Lena
+(P, S, p, s) = perfft2(img)  # &#39;Periodic&#39; fft of Lena
+
+set_cmap(PyPlot.ColorMap(&quot;gray&quot;))
+
+imshow(img)  # Lena  (img = p + s)
+imshow(p)    # The periodic component of Lena
+save(&quot;lena_p.png&quot;, imadjustintensity(p)) # hide
+imshow(s)    # The smooth component of Lena
+save(&quot;lena_s.png&quot;, imadjustintensity(s)) # hide
+
+imshow(log.(abs.(fftshift(IMG)))) # Note the vertical and horizontal cross in
+                                  # the spectrum induced by the non-periodic edges.
+save(&quot;lena_fft.png&quot;, imadjustintensity(log.(abs.(fftshift(IMG))))) # hide
+imshow(log.(abs.(fftshift(P))))   # Note the clean spectrum because p is periodic.
+save(&quot;lena_fft_p.png&quot;, imadjustintensity(log.(abs.(fftshift(P))))) # hide
+</code></pre><table><tr><th>Lena</th><th></th></tr><tr><td><img src="lena.png" alt/></td><td></td></tr><tr><td><strong>Lena: periodic component</strong></td><td><strong>Lena: smooth component</strong></td></tr><tr><td><img src="lena_p.png" alt/></td><td><img src="lena_s.png" alt/></td></tr><tr><td><strong>Spectrum of periodic component</strong></td><td><strong>Spectrum of standard FFT</strong></td></tr><tr><td><img src="lena_fft_p.png" alt/></td><td><img src="lena_fft.png" alt/></td></tr></table><footer><hr/><a class="previous" href="../"><span class="direction">Previous</span><span class="title">ImagePhaseCongruency</span></a><a class="next" href="../functions/"><span class="direction">Next</span><span class="title">Function Reference</span></a></footer></article></body></html>
