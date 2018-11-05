@@ -2,7 +2,7 @@
 
 Note that these examples use PyPlot for the output.  However I have had difficulty getting the automated documentation building process to handle PyPlot, accordingly all calls have been commented out.  If you want to execute these examples simple reinstate the PyPlot calls and all should be well.
 
-## Phase Congruency
+## [Phase Congruency](@id PhaseCongruencyExample)
 
 Phase congruency marks all classes of features from steps to lines and is a
 dimensionless quantity that ranges from 0 to 1.  This allows fixed
@@ -71,7 +71,7 @@ save("lena_mc.png", imadjustintensity(m)) # hide
 |![](lena_Me.png)           |![](lena_mc.png)           |
 
 
-## Phase Symmetry
+## [Phase Symmetry](@id PhaseSymmetryExample)
 
 Phase symmetry responds well to line like features and circular objects.  The
 number of filter scales will affect the scale of features that are marked.
@@ -112,7 +112,7 @@ save("blobs_sym-1.png", phaseSym) #hide
 |![](blobs_sym1.png) |![](blobs_sym-1.png) |
 
 
-## Phase Preserving Dynamic Range Compression
+## [Phase Preserving Dynamic Range Compression](@id ppdrcExample)
 
 An example using the 16 bit M51 image.  Phase preserving dynamic range
 compression allows the scale of analysis to be controlled.  Here we process the
@@ -155,7 +155,7 @@ save("m51ppdrc200.png", imadjustintensity(ppdrc(img*scale, 200))) #hide
 |![](m51ppdrc50.png) |![](m51ppdrc200.png)|
 
 
-## Phase Preserving Denoising
+## [Phase Preserving Denoising](@id ppdenoiseExample)
 
 ```@setup denoise
 using TestImages
