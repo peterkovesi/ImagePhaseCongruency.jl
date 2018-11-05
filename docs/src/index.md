@@ -42,7 +42,7 @@ values to be used over large classes of images.
 
 * [`phasecongmono()`](@ref) Phase congruency of an image using monogenic filters.
 * [`phasecong3()`](@ref) Computes edge and corner phase congruency in an image via log-Gabor filters.
-
+* [Example](@ref PhaseCongruencyExample) of using `phasecongmono()` and `phasecong3()`.
 
 ## Phase symmetry
 
@@ -58,6 +58,7 @@ quantity.
 
 * [`phasesym()`](@ref) Compute phase symmetry on an image via log-Gabor filters.
 * [`phasesymmono()`](@ref) Phase symmetry of an image using monogenic filters.
+* [Example](@ref PhaseSymmetryExample) of using `phasesymmono()`.
 
 
 ## Phase preserving denoising
@@ -74,6 +75,7 @@ corrupted. It is also allows threshold values can be determined automatically
 from the statistics of the wavelet responses to the image.
 
 * [`ppdenoise()`](@ref) Phase preserving wavelet image denoising.
+* [Example](@ref ppdenoiseExample) of using `ppdenoise()`.
 
 
 ## Phase preserving dynamic range compression
@@ -93,6 +95,8 @@ information is preserved and the contrast amplification of structures in the
 signal is purely a function of their amplitude.
 
 * [`ppdrc()`](@ref) Phase Preserving Dynamic Range Compression.
+* [Example](@ref ppdrcExample) of using `ppdrc()`.
+
 
 ## Supporting filtering functions
 
