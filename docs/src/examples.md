@@ -1,12 +1,19 @@
 # Examples
 
+Note that these examples use PyPlot for the output.  However I have had difficulty getting the automated documentation building process to handle PyPlot, accordingly all calls have been commented out.  If you want to execute these examples simple reinstate the PyPlot calls and all should be well.
+
 ## Phase Congruency
 
 Phase congruency marks all classes of features from steps to lines and is a
 dimensionless quantity that ranges from 0 to 1.  This allows fixed
 thresholds to be used over wide classes of images.
 
-```@example
+```@setup phasecong
+using TestImages
+img = testimage("lena_gray_512")
+```
+
+```@example phasecong
 using ImagePhaseCongruency, Images, TestImages #, PyPlot
 
 img = testimage("lena_gray_512")
@@ -42,7 +49,12 @@ Use of the function `phasecong3()` allows corner points to be detected as well.
 These corner points are a subset of the edge image and, unlike other corner
 detectors, their location is precise and stable over different scales.
 
-```@example
+```@setup phasecong3
+using TestImages
+img = testimage("lena_gray_512")
+```
+
+```@example phasecong3
 using ImagePhaseCongruency, Images, TestImages #, PyPlot
 
 img = testimage("lena_gray_512")
@@ -67,7 +79,12 @@ Phase symmetry marks features independently of contrast (a bright circle is not
 more symmetric than a grey circle) and is a dimensionless quantity between 0 and 1.  However this may not be what one desires in which case the symmetry energy
 may be of greater interest.
 
-```@example
+```@setup phasesym
+using TestImages
+img = testimage("blobs")
+```
+
+```@example phasesym
 using ImagePhaseCongruency, Images, TestImages #, PyPlot
 
 img = Float64.(Gray.(testimage("blobs")))
@@ -103,7 +120,12 @@ image at wavelengths up to 50 pixels and up to 200 pixels.  Longer wavelengths
 allow larger structures to be seen. Small wavelengths allow fine structures to
 be seen.  Note the image size is (510, 320).
 
-```@example
+```@setup ppdrc
+using TestImages
+img = testimage("m51")
+```
+
+```@example ppdrc
 using ImagePhaseCongruency, TestImages, Images #, PyPlot
 
 #set_cmap(PyPlot.ColorMap("gray"))
@@ -135,7 +157,12 @@ save("m51ppdrc200.png", imadjustintensity(ppdrc(img*scale, 200))) #hide
 
 ## Phase Preserving Denoising
 
-```@example
+```@setup denoise
+using TestImages
+img = testimage("lena_gray_512")
+```
+
+```@example denoise
 using ImagePhaseCongruency, TestImages, Images #, PyPlot
 
 img = Float64.(testimage("lena_gray_512"))  # Values in the range 0 to 1
@@ -166,7 +193,13 @@ reverse can apply.
 
 See [Oppenheim and Lim's paper "The importance of phase in signals". Proceedings of the IEEE. Volume: 69 , Issue: 5 , May 1981](https://ieeexplore.ieee.org/document/1456290)
 
-```@example
+```@setup phaseswap
+using TestImages
+img = testimage("lena_gray_512")
+img = testimage("mandril_gray")
+```
+
+```@example phaseswap
 using ImagePhaseCongruency, Images, TestImages #, PyPlot
 
 img1 = Float64.(testimage("lena_gray_512"))
@@ -193,8 +226,12 @@ quantized very heavily with little perceptual loss.  It can be quantized to a
 few as four levels, or even three.  Quantizing to two levels still gives an
 image that can be interpreted.
 
+```@setup phasequant
+using TestImages
+img = testimage("lena_gray_512")
+```
 
-```@example
+```@example phasequant
 using ImagePhaseCongruency, Images, TestImages #, PyPlot
 
 lena = testimage("lena_gray_512")
@@ -308,7 +345,12 @@ Reference:
 L. Moisan, "Periodic plus Smooth Image Decomposition", Journal of
 Mathematical Imaging and Vision, vol 39:2, pp. 161-179, 2011.
 
-```@example
+```@setup perfft
+using TestImages
+img = testimage("lena_gray_512")
+```
+
+```@example perfft
 using ImagePhaseCongruency, TestImages, Images, FFTW #,PyPlot
 
 img = Float64.(testimage("lena_gray_512"))
