@@ -181,6 +181,12 @@ git-tree-sha1 = "d2e75f9bfe9659f9b90553737e039bab93a66a0a"
 uuid = "6a3955dd-da59-5b1f-98d4-e7296123deb5"
 version = "0.5.0"
 
+[[ImageMagick]]
+deps = ["BinaryProvider", "ColorTypes", "FileIO", "FixedPointNumbers", "ImageCore", "InteractiveUtils", "Libdl", "Pkg", "Random", "Test"]
+git-tree-sha1 = "0e4cc77fb131061b3525a97fd7d483b253c3aaad"
+uuid = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
+version = "0.7.1"
+
 [[ImageMetadata]]
 deps = ["AxisArrays", "ColorVectorSpace", "Colors", "Dates", "FixedPointNumbers", "ImageAxes", "ImageCore", "IndirectArrays", "Statistics", "Test"]
 git-tree-sha1 = "3eac47d5b62dfeb4d06ec5be85592ebd437112ea"
