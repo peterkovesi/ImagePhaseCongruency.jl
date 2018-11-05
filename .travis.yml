@@ -1,11 +1,11 @@
 language: julia
 os:
   - linux
-#  - osx
+  - osx
 julia:
-#  - 0.7
+  - 0.7
   - 1.0
-#  - nightly
+  - nightly
 notifications:
   email: false
 git:
@@ -15,7 +15,7 @@ matrix:
   - julia: nightly
 script:
   - julia --color=yes -e 'using Pkg; Pkg.build()'
-#  - julia --check-bounds=yes --color=yes -e 'using Pkg; Pkg.test(coverage=true)'
+  - julia --check-bounds=yes --color=yes -e 'using Pkg; Pkg.test(coverage=true)'
 jobs:
   include:
     - stage: "Documentation"
