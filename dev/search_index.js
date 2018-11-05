@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "ImagePhaseCongruency",
     "title": "Feature detection via phase congruency",
     "category": "section",
-    "text": ". \n(Image: ) (Image: )Rather than assume a feature is a point of maximal intensity gradient, the Local Energy Model postulates that features are perceived at points in an image where the Fourier components are maximally in phase. (See the Fourier Series logo of this page).  This model was developed by Morrone et al. [1986] and Morrone and Owens [1987].  Kovesi [1997, 1999, 2002] subsequently developed methods of computing phase congruency from quadrature pairs of log-Gabor wavelets.Phase congruency is an illumination and contrast invariant measure of feature significance. Unlike gradient based feature detectors, which can only detect step features, phase congruency correctly detects features at all kind of phase angle, and not just step features having a phase angle of 0 or 180 degrees. Another key attribute is that phase congruency is a dimensionless quantity ranging from 0 to 1, making it contrast invariant. This allows fixed threshold values to be used over large classes of images.phasecongmono() Phase congruency of an image using monogenic filters.\nphasecong3() Computes edge and corner phase congruency in an image via log-Gabor filters."
+    "text": ". \n(Image: ) (Image: )Rather than assume a feature is a point of maximal intensity gradient, the Local Energy Model postulates that features are perceived at points in an image where the Fourier components are maximally in phase. (See the Fourier Series logo of this page).  This model was developed by Morrone et al. [1986] and Morrone and Owens [1987].  Kovesi [1997, 1999, 2002] subsequently developed methods of computing phase congruency from quadrature pairs of log-Gabor wavelets.Phase congruency is an illumination and contrast invariant measure of feature significance. Unlike gradient based feature detectors, which can only detect step features, phase congruency correctly detects features at all kind of phase angle, and not just step features having a phase angle of 0 or 180 degrees. Another key attribute is that phase congruency is a dimensionless quantity ranging from 0 to 1, making it contrast invariant. This allows fixed threshold values to be used over large classes of images.phasecongmono() Phase congruency of an image using monogenic filters.\nphasecong3() Computes edge and corner phase congruency in an image via log-Gabor filters.\nExample of using phasecongmono() and phasecong3()."
 },
 
 {
@@ -37,7 +37,7 @@ var documenterSearchIndex = {"docs": [
     "page": "ImagePhaseCongruency",
     "title": "Phase symmetry",
     "category": "section",
-    "text": ". \n(Image: ) (Image: )A point of local symmetry in an image corresponds to a point where the local frequency components are at either the minimum or maximum points in their cycles, that is, where all the frequency components are at the most symmetric points in their cycles. Like phase congruency, phase symmetry is a dimensionless quantity.phasesym() Compute phase symmetry on an image via log-Gabor filters.\nphasesymmono() Phase symmetry of an image using monogenic filters."
+    "text": ". \n(Image: ) (Image: )A point of local symmetry in an image corresponds to a point where the local frequency components are at either the minimum or maximum points in their cycles, that is, where all the frequency components are at the most symmetric points in their cycles. Like phase congruency, phase symmetry is a dimensionless quantity.phasesym() Compute phase symmetry on an image via log-Gabor filters.\nphasesymmono() Phase symmetry of an image using monogenic filters.\nExample of using phasesymmono()."
 },
 
 {
@@ -45,7 +45,7 @@ var documenterSearchIndex = {"docs": [
     "page": "ImagePhaseCongruency",
     "title": "Phase preserving denoising",
     "category": "section",
-    "text": ". \n(Image: ) (Image: )This is a wavelet denoising scheme that uses non-orthogonal, complex valued, log-Gabor wavelets, rather than the more usual orthogonal or bi-orthogonal wavelets. Thresholding of wavelet responses in the complex domain allows one to ensure that perceptually important phase information in the image is not corrupted. It is also allows threshold values can be determined automatically from the statistics of the wavelet responses to the image.ppdenoise() Phase preserving wavelet image denoising."
+    "text": ". \n(Image: ) (Image: )This is a wavelet denoising scheme that uses non-orthogonal, complex valued, log-Gabor wavelets, rather than the more usual orthogonal or bi-orthogonal wavelets. Thresholding of wavelet responses in the complex domain allows one to ensure that perceptually important phase information in the image is not corrupted. It is also allows threshold values can be determined automatically from the statistics of the wavelet responses to the image.ppdenoise() Phase preserving wavelet image denoising.\nExample of using ppdenoise()."
 },
 
 {
@@ -53,7 +53,7 @@ var documenterSearchIndex = {"docs": [
     "page": "ImagePhaseCongruency",
     "title": "Phase preserving dynamic range compression",
     "category": "section",
-    "text": ". \n(Image: ) (Image: )A common method for displaying images with a high dynamic range is to use some variant of histogram equalization.  The problem with histogram equalization is that the contrast amplification of a feature depends on how commonly its data value occurs and this can lead to some undesirable distortions in the relative amplitudes of features.  Phase Preserving Dynamic Range Compression allows subtle features in images to be revealed without these distortions. It also allows the scale of analysis to be controlled. Perceptually important phase information is preserved and the contrast amplification of structures in the signal is purely a function of their amplitude.ppdrc() Phase Preserving Dynamic Range Compression."
+    "text": ". \n(Image: ) (Image: )A common method for displaying images with a high dynamic range is to use some variant of histogram equalization.  The problem with histogram equalization is that the contrast amplification of a feature depends on how commonly its data value occurs and this can lead to some undesirable distortions in the relative amplitudes of features.  Phase Preserving Dynamic Range Compression allows subtle features in images to be revealed without these distortions. It also allows the scale of analysis to be controlled. Perceptually important phase information is preserved and the contrast amplification of structures in the signal is purely a function of their amplitude.ppdrc() Phase Preserving Dynamic Range Compression.\nExample of using ppdrc()."
 },
 
 {
@@ -113,7 +113,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples/#Phase-Congruency-1",
+    "location": "examples/#PhaseCongruencyExample-1",
     "page": "Examples",
     "title": "Phase Congruency",
     "category": "section",
@@ -121,7 +121,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples/#Phase-Symmetry-1",
+    "location": "examples/#PhaseSymmetryExample-1",
     "page": "Examples",
     "title": "Phase Symmetry",
     "category": "section",
@@ -129,7 +129,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples/#Phase-Preserving-Dynamic-Range-Compression-1",
+    "location": "examples/#ppdrcExample-1",
     "page": "Examples",
     "title": "Phase Preserving Dynamic Range Compression",
     "category": "section",
@@ -137,7 +137,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "examples/#Phase-Preserving-Denoising-1",
+    "location": "examples/#ppdenoiseExample-1",
     "page": "Examples",
     "title": "Phase Preserving Denoising",
     "category": "section",
