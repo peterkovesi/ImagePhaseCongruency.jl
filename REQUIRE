@@ -1,7 +1,7 @@
 julia         0.7
-AbstractFFTs  0.3.2
-FFTW          0.2.4
-FileIO        1.0.2
-ImageMagick   0.7.2
-Images        0.16.0
-TestImages    0.4.0
+AbstractFFTs
+FFTW
+FileIO
+ImageMagick
+Images
+TestImages
