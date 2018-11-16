@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "ImagePhaseCongruency",
     "title": "Installation",
     "category": "section",
-    "text": "At the moment the package is not registered. Use the following command in the package managerpkg> add https://github.com/peterkovesi/ImagePhaseCongruency.jl"
+    "text": "pkg> add ImagePhaseCongruency"
 },
 
 {
