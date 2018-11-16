@@ -9,10 +9,7 @@ ImagePhaseCongruency
 
 ## Installation
 
-At the moment the package is not registered. Use the following command in
-the package manager
-
-`pkg> add https://github.com/peterkovesi/ImagePhaseCongruency.jl`
+`pkg> add ImagePhaseCongruency`
 
 
 ## Summary
