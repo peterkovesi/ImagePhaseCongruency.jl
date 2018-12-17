@@ -24,6 +24,10 @@ highpassmonogenic(img::AbstractArray{T1,2}, maxwavelength::Vector{T2}, n::Intege
 ```
 
 ```@docs
+bandpassmonogenic(img::AbstractArray{T1,2}, minwavelength::Vector{T2}, maxwavelength::Vector{T3}, n::Integer) where {T1 <: Real, T2 <: Real, T3 <: Real}
+```
+
+```@docs
 phasesymmono(img::AbstractArray{T1,2}; nscale::Integer = 5, minwavelength::Real = 3, 
                        mult::Real = 2.1, sigmaonf::Real = 0.55, k::Real = 2.0,
                        polarity::Integer = 0, noisemethod::Real = -1) where T1 <: Real
