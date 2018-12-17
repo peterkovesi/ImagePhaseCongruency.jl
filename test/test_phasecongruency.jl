@@ -18,14 +18,14 @@ println("Testing phase congruency functions...")
 
 img = testimage("lena_gray")
 img = Float64.(img)
-disp ? imshow(img) : nothing
+disp ? imshow(img, ColorMap("gray")) : nothing
 
 println("Phase preserving dynamic range compresion")
-(dimg, mask) = ppdrc(img, 50; clip=0.01, n=2)
-disp ? imshow(dimg) : nothing
+dimg = ppdrc(img, 50; clip=0.01, n=2)
+disp ? imshow(dimg, ColorMap("gray")) : nothing
 
-(dimg, mask) = ppdrc(img, geoseries((20,60),3))
-disp ? imshow(dimg[1]) : nothing
+dimg = ppdrc(img, geoseries((20,60),3))
+disp ? imshow(dimg[1], ColorMap("gray")) : nothing
 
 
 println("phasecongmono")
@@ -35,37 +35,37 @@ println("phasecongmono")
                         deviationgain=1.5, noisemethod=-1)
 
 PC = phasecongmono(img, nscale=3)[1]
-disp ? imshow(PC) : nothing
+disp ? imshow(PC, ColorMap("gray")) : nothing
 
 println("phasesymmono")
  (phaseSym, symmetryEnergy, T) =
            phasesymmono(img; nscale=3, minwavelength=3, mult=2,
                         sigmaonf=0.55, k=2, polarity=1, noisemethod=-1)
 
-disp ? imshow(phaseSym) : nothing
+disp ? imshow(phaseSym, ColorMap("gray")) : nothing
 
 phaseSym = phasesymmono(img)[1]
-disp ? imshow(phaseSym) : nothing
+disp ? imshow(phaseSym, ColorMap("gray")) : nothing
 
 println("phasecong3")
 (M, m, or, ft, EO, T) = phasecong3(img; nscale=3, norient=6, minwavelength=3,
                           mult=2, sigmaonf=0.55, k=2, cutoff=0.5,
                           g = 10, noisemethod=-1)
 
-disp ? imshow(M) : nothing
-disp ? imshow(m) : nothing
+disp ? imshow(M, ColorMap("gray")) : nothing
+disp ? imshow(m, ColorMap("gray")) : nothing
 
 println("phasesym")
-(phaseSym, orientation, totalEnergy, T) =
+(phaseSym, orient, totalEnergy, T) =
             phasesym(img; nscale = 5, norient = 6, minwavelength = 3, mult= 2,
                      sigmaonf = 0.55, k = 2, polarity = 0, noisemethod = -1)
-disp ? imshow(phaseSym) : nothing
+disp ? imshow(phaseSym, ColorMap("gray")) : nothing
 
 println("ppdenoise")
 cleanimage = ppdenoise(img,  nscale = 5, norient = 6,
                               mult = 2.5, minwavelength = 2, sigmaonf = 0.55,
                               dthetaonsigma = 1.0, k = 3, softness = 1.0)
-disp ? imshow(cleanimage) : nothing
+disp ? imshow(cleanimage, ColorMap("gray")) : nothing
 
 println("monofilt")
 nscale = 4
@@ -84,7 +84,20 @@ println("gaborconvolve")
 (EO, BP) = gaborconvolve(img,  nscale, norient, minWaveLength, mult,
                                  sigmaOnf, dThetaOnSigma, Lnorm)
 
-disp ? imshow(real.(EO[nscale,1])) : nothing
-disp ? imshow(BP[nscale]) : nothing
+disp ? imshow(real.(EO[nscale,1]), ColorMap("gray")) : nothing
+disp ? imshow(BP[nscale], ColorMap("gray")) : nothing
+
+println("highpassmonogenic and bandpassmonogenic")
+minwavelength = 4
+maxwavelength = 20
+n = 4
+(ph, orient, E) = highpassmonogenic(img, maxwavelength, n)
+disp ? imshow(ph, ColorMap("gray")) : nothing
+disp ? imshow(orient, ColorMap("gray")) : nothing
+disp ? imshow(E, ColorMap("gray")) : nothing
+(ph, orient, E) = bandpassmonogenic(img, minwavelength, maxwavelength, n)
+disp ? imshow(ph, ColorMap("gray")) : nothing
+disp ? imshow(orient, ColorMap("gray")) : nothing
+disp ? imshow(E, ColorMap("gray")) : nothing
 
 nothing

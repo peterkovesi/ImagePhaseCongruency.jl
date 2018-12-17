@@ -35,7 +35,8 @@ October  2018  Julia 0.7/1.0
 ---------------------------------------------------------------------=#
 using Images, FFTW, Statistics
 
-export phasecongmono, phasesymmono, ppdrc, highpassmonogenic
+export phasecongmono, phasesymmono, ppdrc
+export highpassmonogenic, bandpassmonogenic
 export gaborconvolve, monofilt
 export phasecong3, phasesym, ppdenoise
 
@@ -171,8 +172,7 @@ Arguments:           img - Image to be processed.  A 2D array of Real or Gray el
                            of the Butterworth highpass filter.
                        n - The order of the Butterworth filter. This is an
                            integer >= 1.  The higher the value the sharper
-                           the cutoff.  I generally do not use a value
-                           higher than 2 to avoid ringing artifacts
+                           the cutoff.
 
 Returns:           phase - The local phase. Values are between -pi/2 and pi/2
                   orient - The local orientation. Values between -pi and pi.
@@ -183,11 +183,14 @@ Returns:           phase - The local phase. Values are between -pi/2 and pi/2
 Note that `maxwavelength` can be an array in which case the outputs will
 be an array of output images of length `nscales`,  where `nscales = length(maxwavelength)`.
 
-See also: [`ppdrc`](@ref), [`monofilt`](@ref)
+See also: [`bandpassmonogenic`](@ref), [`ppdrc`](@ref), [`monofilt`](@ref)
 """
 function highpassmonogenic(img::AbstractArray{T1,2}, maxwavelength::Vector{T2}, n::Integer) where {T1 <: Real, T2 <: Real}
 
-    @assert minimum(maxwavelength) >= 2  "Minimum wavelength is 2 pixels"
+    if minimum(maxwavelength) < 2
+        error("Minimum wavelength that can be specified is 2 pixels")
+    end
+
     nscales = length(maxwavelength)
     IMG = fft(img)
 
@@ -229,9 +232,91 @@ function highpassmonogenic(img::AbstractArray{T,2}, maxwavelength::Real, n::Inte
 end
 
 # Case for an image of Gray values
-function highpassmonogenic(img::AbstractArray{T,2}, maxwavelength::Real, n::Integer) where T <: Gray
+function highpassmonogenic(img::AbstractArray{T,2}, maxwavelength, n::Integer) where T <: Gray
     fimg = Float64.(img)
     return highpassmonogenic(fimg, maxwavelength, n)
+end
+
+#--------------------------------------------------------------------
+# bandpassmonogenic
+"""
+Compute phase and amplitude in bandpass images via monogenic filters.
+```
+Usage: (phase, orient, E) = bandpassmonogenic(img, minwavelength, maxwavelength, n)
+
+Arguments:           img - Image to be processed.  A 2D array of Real or Gray elements.
+           minwavelength - } Wavelength(s) in pixels of the cut-in and cut-out frequency(ies)
+           maxwavelength - } of the Butterworth bandpass filter(s).
+                       n - The order of the Butterworth filter. This is an
+                           integer >= 1.  The higher the value the sharper
+                           the cutoff.
+
+Returns:           phase - The local phase. Values are between -pi/2 and pi/2
+                  orient - The local orientation. Values between -pi and pi.
+                           Note that where the local phase is close to
+                           +-pi/2 the orientation will be poorly defined.
+                       E - Local energy, or amplitude, of the signal.
+```
+Note that `minwavelength` and `maxwavelength` can be (equal length) arrays in which case the outputs will
+be an array of output images of length `nscales`,  where `nscales = length(maxwavelength)`.
+
+See also: [`highpassmonogenic`](@ref), [`ppdrc`](@ref), [`monofilt`](@ref)
+"""
+function bandpassmonogenic(img::AbstractArray{T1,2}, minwavelength::Vector{T2}, maxwavelength::Vector{T3}, n::Integer) where {T1 <: Real, T2 <: Real, T3 <: Real}
+
+    if minimum(minwavelength) < 2 || minimum(maxwavelength) < 2
+        error("Minimum wavelength that can be specified is 2 pixels")
+    end
+
+    if length(minwavelength) != length(maxwavelength)
+        error("Arrays of min and max wavelengths must be of same length")
+    end
+
+    nscales = length(maxwavelength)
+    IMG = fft(img)
+
+    # Generate monogenic and filter grids
+    (H1, H2, freq) = monogenicfilters(size(img))
+
+    phase = Vector{Array{Float64,2}}(undef, nscales)
+    orient = Array{Array{Float64,2}}(undef, nscales)
+    E = Vector{Array{Float64,2}}(undef, nscales)
+    f = zeros(size(img))
+    h1f = zeros(size(img))
+    h2f = zeros(size(img))
+    H = zeros(size(img))
+
+    for s = 1:nscales
+        # Band pass Butterworth filter
+        H .=  1.0 ./ (1.0 .+ (freq .* minwavelength[s]).^(2*n)) .-
+              1.0 ./ (1.0 .+ (freq .* maxwavelength[s]).^(2*n))
+
+        f .= real.(ifft(H.*IMG))
+        h1f .= real.(ifft(H.*H1.*IMG))
+        h2f .= real.(ifft(H.*H2.*IMG))
+
+        phase[s] = atan.(f./sqrt.(h1f.^2 .+ h2f.^2 .+ eps()))
+        orient[s] = atan.(h2f, h1f)
+        E[s] = sqrt.(f.^2 .+ h1f.^2 .+ h2f.^2)
+    end
+
+    # If a single scale specified return output matrices directly
+    if nscales == 1
+        return phase[1], orient[1], E[1]
+    else
+        return phase, orient, E
+    end
+end
+
+# Version when min and maxwavelength is a scalar
+function bandpassmonogenic(img::AbstractArray{T,2}, minwavelength::Real, maxwavelength::Real, n::Integer) where T <: Real
+    return bandpassmonogenic(img, [minwavelength], [maxwavelength], n)
+end
+
+# Case for an image of Gray values
+function bandpassmonogenic(img::AbstractArray{T,2}, minwavelength, maxwavelength, n::Integer) where T <: Gray
+    fimg = Float64.(img)
+    return bandpassmonogenic(fimg, minwavelength, maxwavelength, n)
 end
 
 #--------------------------------------------------------------------
