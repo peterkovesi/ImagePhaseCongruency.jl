@@ -712,14 +712,11 @@ function perfft2(img::Array{T,2}) where T <: Real
     # Generate grid upon which to compute the filter for the boundary image in
     # the frequency domain.  Note that cos() is cyclic hence the grid values can
     # range from 0 .. 2*pi rather than 0 .. pi and then pi .. 0
-#    (cx, cy) = meshgrid(2*pi*[0:cols-1]/cols, 2*pi*[0:rows-1]/rows)
-#    S = fft(s)./(2*(2 .- cos.(cx) .- cos.(cy)))
 
-    # ** construct S via a comprehension
     # Generate FFT of smooth component
     cxrange = 2*pi*(0:cols-1)/cols
     cyrange = 2*pi*(0:rows-1)/rows
-    denom = [2*(2 - cos(cx) - cos(cy)) for cx in cxrange, cy in cyrange]
+    denom = [2*(2 - cos(cx) - cos(cy)) for cy in cyrange, cx in cxrange]
     S = fft(s)./denom
 
     # The [1,1] element of the filter will be 0 so S[1,1] may be Inf or NaN
