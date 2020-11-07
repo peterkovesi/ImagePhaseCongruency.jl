@@ -9,7 +9,7 @@ Set 'disp' = true to display the images
 
 disp = false
 
-using ImagePhaseCongruency, TestImages
+using ImagePhaseCongruency, Images, TestImages
 
 if disp
     using PyPlot
@@ -25,7 +25,9 @@ end
 
 disp ? PyPlot.set_cmap(PyPlot.ColorMap("gray")) : nothing
 
-lena = Float64.(testimage("lena_gray"))
+#lena = Float64.(testimage("lena_gray"))
+# We need the test image to be square for the phase amplitude tests.
+testimg = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512]
 
 sze = 512
 img = step2line(sze; nscales=50, ampexponent=-1, ncycles=1.5, phasecycles=0.25)
@@ -53,23 +55,23 @@ if disp
     mypause()
 end
 
-newimg = nophase(lena)
+newimg = nophase(testimg)
 if disp
-    imshow(newimg); title("Lena with randomized phase")
+    imshow(newimg); title("Testimg with randomized phase")
     mypause()
 end
 
-newimg = quantizephase(lena, 4)
+newimg = quantizephase(testimg, 4)
 if disp
-    imshow(newimg); title("Lena with phase quantized to 4 levels")
+    imshow(newimg); title("Testimg with phase quantized to 4 levels")
     mypause()
 end
 
-(newimg1, newimg2) = swapphase(lena, lena')
+(newimg1, newimg2) = swapphase(testimg, testimg')
 if disp
-    imshow(newimg1); title("Lena with phase of Lena transposed")
+    imshow(newimg1); title("Testimg with phase of Testimg transposed")
     mypause()
-    imshow(newimg2); title("Lena transposed with phase of Lena")
+    imshow(newimg2); title("Testimg transposed with phase of Testimg")
     mypause()
 end
 

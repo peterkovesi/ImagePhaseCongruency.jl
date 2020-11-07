@@ -20,7 +20,7 @@ form two main groups:
 
 |.  |   |
 |---|---|
-|![](lena.png)              |![](lena_bw.png)           |
+|![](testimg.png)              |![](testimg_bw.png)           |
 
 Rather than assume a feature is a point of maximal intensity gradient, the Local
 Energy Model postulates that features are perceived at points in an image where
@@ -62,7 +62,7 @@ quantity.
 
 |.  |   |
 |---|---|
-| ![](lenaplusnoise.png) | ![](lenadenoised.png) |
+| ![](testimgplusnoise.png) | ![](testimgdenoised.png) |
 
 This is a wavelet denoising scheme that uses non-orthogonal, complex valued,
 log-Gabor wavelets, rather than the more usual orthogonal or bi-orthogonal

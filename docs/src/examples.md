@@ -9,18 +9,17 @@ dimensionless quantity that ranges from 0 to 1.  This allows fixed
 thresholds to be used over wide classes of images.
 
 ```@setup phasecong
-using TestImages
-img = testimage("lena_gray_512")
+using TestImages, Images
+img = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512];
 ```
 
 ```@example phasecong
 using ImagePhaseCongruency, Images, TestImages #, PyPlot
 
-img = testimage("lena_gray_512")
-img = Float64.(img)
+img = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512];
 #set_cmap(PyPlot.ColorMap("gray"))
 #imshow(img); axis("off")
-save("lena.png", img) # hide
+save("testimg.png", img) # hide
 
 (pc, or, ft, T) =
          phasecongmono(img; nscale=4, minwavelength=3, mult=2,
@@ -28,21 +27,21 @@ save("lena.png", img) # hide
                         deviationgain=1.5, noisemethod=-1)
 
 #imshow(pc); axis("off")
-save("lena_pc.png", imadjustintensity(pc)) # hide
+save("testimg_pc.png", imadjustintensity(pc)) # hide
 nonmax = thin_edges_nonmaxsup(pc, or)
 #imshow(nonmax); axis("off")
-save("lena_nm.png", imadjustintensity(nonmax)) # hide
+save("testimg_nm.png", imadjustintensity(nonmax)) # hide
 # Hysteresis threshold between Phase Congruency of 0.1 and 0.2
 bw = hysthresh(nonmax, 0.1, 0.2)
 #imshow(bw); axis("off")
-save("lena_bw.png", bw) # hide
+save("testimg_bw.png", bw) # hide
 ```
 
-|  Lena                     | Phase Congruency          |
+|  Test image               | Phase Congruency          |
 |---------------------------|---------------------------|
-|![](lena.png)              |![](lena_pc.png)           |
+|![](testimg.png)           |![](testimg_pc.png)        |
 |**Non-maximal suppression**|**Hysteresis thresholded** |
-|![](lena_nm.png)           |![](lena_bw.png)           |
+|![](testimg_nm.png)        |![](testimg_bw.png)        |
 
 
 Use of the function `phasecong3()` allows corner points to be detected as well.
@@ -50,25 +49,25 @@ These corner points are a subset of the edge image and, unlike other corner
 detectors, their location is precise and stable over different scales.
 
 ```@setup phasecong3
-using TestImages
-img = testimage("lena_gray_512")
+using TestImages, Images
+img = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512];
 ```
 
 ```@example phasecong3
 using ImagePhaseCongruency, Images, TestImages #, PyPlot
 
-img = testimage("lena_gray_512")
+img = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512];
 #set_cmap(PyPlot.ColorMap("gray"))
 (M, m) = phasecong3(img)
 #imshow(M); axis("off")  # Edge image
-save("lena_Me.png", imadjustintensity(M)) # hide
+save("testimg_Me.png", imadjustintensity(M)) # hide
 #imshow(m); axis("off")  # 'Corner' image
-save("lena_mc.png", imadjustintensity(m)) # hide
+save("testimg_mc.png", imadjustintensity(m)) # hide
 ```
 
-|  Lena edges               | Lena corners              |
+|  Test image edges         | Test image corners        |
 |---------------------------|---------------------------|
-|![](lena_Me.png)           |![](lena_mc.png)           |
+|![](testimg_Me.png)        |![](testimg_mc.png)        |
 
 
 ## [Phase Symmetry](@id PhaseSymmetryExample)
@@ -158,14 +157,14 @@ save("m51ppdrc200.png", imadjustintensity(ppdrc(img*scale, 200))) #hide
 ## [Phase Preserving Denoising](@id ppdenoiseExample)
 
 ```@setup denoise
-using TestImages
-img = testimage("lena_gray_512")
+using TestImages, Images
+img = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512]
 ```
 
 ```@example denoise
 using ImagePhaseCongruency, TestImages, Images #, PyPlot
 
-img = Float64.(testimage("lena_gray_512"))  # Values in the range 0 to 1
+img = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512]; # Values in the range 0 to 1
 img .+= 0.25 * randn(size(img))             # Add noise with standard deviation of 0.25
 
 cleanimg = ppdenoise(img,  nscale = 6, norient = 6, mult = 2.5, minwavelength = 2,
@@ -173,14 +172,14 @@ cleanimg = ppdenoise(img,  nscale = 6, norient = 6, mult = 2.5, minwavelength = 
 
 #set_cmap(PyPlot.ColorMap("gray"))
 #imshow(img)
-save("lenaplusnoise.png", imadjustintensity(img)) #hide
+save("testimgplusnoise.png", imadjustintensity(img)) #hide
 #imshow(cleanimg)
-save("lenadenoised.png", imadjustintensity(cleanimg)) #hide
+save("testimgdenoised.png", imadjustintensity(cleanimg)) #hide
 ```
 
-| Lena + noise           | Lena denoised         |
-|------------------------|-----------------------|
-| ![](lenaplusnoise.png) | ![](lenadenoised.png) |
+| Test image + noise        | Test image denoised      |
+|---------------------------|--------------------------|
+| ![](testimgplusnoise.png) | ![](testimgdenoised.png) |
 
 ## Phase-Amplitude Swapping
 
@@ -194,29 +193,29 @@ reverse can apply.
 See [Oppenheim and Lim's paper "The importance of phase in signals". Proceedings of the IEEE. Volume: 69 , Issue: 5 , May 1981](https://ieeexplore.ieee.org/document/1456290)
 
 ```@setup phaseswap
-using TestImages
-img = testimage("lena_gray_512")
+using TestImages, Images
+img = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512]
 img = testimage("mandril_gray")
 ```
 
 ```@example phaseswap
 using ImagePhaseCongruency, Images, TestImages #, PyPlot
 
-img1 = Float64.(testimage("lena_gray_512"))
+img1 = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512]
 img2 = Float64.(testimage("mandril_gray"))
 
 (newimg1, newimg2) = swapphase(img1, img2)
 
 #set_cmap(PyPlot.ColorMap("gray"))
 #imshow(newimg1)
-save("phaselenaampmandril.png", imadjustintensity(newimg1)) #hide
+save("phaselighthouseampmandril.png", imadjustintensity(newimg1)) #hide
 #imshow(newimg2)
-save("amplenaphasemandril.png", imadjustintensity(newimg2)) #hide
+save("amplighthousephasemandril.png", imadjustintensity(newimg2)) #hide
 ```
 
-| Phase of Lena, amplitude of Mandril | Amplitude of Lena, phase of Mandril |
-|-------------------------------------|-------------------------------------|
-| ![](phaselenaampmandril.png)        | ![](amplenaphasemandril.png)        |
+| Phase of lighthouse, amplitude of Mandrill | Amplitude of lighthouse, phase of Mandrill |
+|-------------------------------------------|-------------------------------------------|
+| ![](phaselighthouseampmandril.png)        | ![](amplighthousephasemandril.png)        |
 
 
 ## Phase Quantization
@@ -228,32 +227,31 @@ image that can be interpreted.
 
 ```@setup phasequant
 using TestImages
-img = testimage("lena_gray_512")
+img = testimage("mandril_gray")
 ```
 
 ```@example phasequant
 using ImagePhaseCongruency, Images, TestImages #, PyPlot
 
-lena = testimage("lena_gray_512")
-lena = Float64.(lena)
+img = Float64.(testimage("mandril_gray"))
 
 #set_cmap(PyPlot.ColorMap("gray"))
 
-#imshow(quantizephase(lena,8))
-save("lena8.png", imadjustintensity(quantizephase(lena,8))) #hide
-#imshow(quantizephase(lena,4))
-save("lena4.png", imadjustintensity(quantizephase(lena,4))) #hide
-#imshow(quantizephase(lena,3))
-save("lena3.png", imadjustintensity(quantizephase(lena,3))) #hide
-#imshow(quantizephase(lena,2))
-save("lena2.png", imadjustintensity(quantizephase(lena,2))) #hide
+#imshow(quantizephase(img,8))
+save("testimg8.png", imadjustintensity(quantizephase(img,8))) #hide
+#imshow(quantizephase(img,4))
+save("testimg4.png", imadjustintensity(quantizephase(img,4))) #hide
+#imshow(quantizephase(img,3))
+save("testimg3.png", imadjustintensity(quantizephase(img,3))) #hide
+#imshow(quantizephase(img,2))
+save("testimg2.png", imadjustintensity(quantizephase(img,2))) #hide
 
 ```
-|  Lena: 8 phase values    | Lena: 4 phase values     |
+| Mandrill: 8 phase values | Mandrill: 4 phase values |
 |:------------------------:|:------------------------:|
-|![](lena8.png)            | ![](lena4.png)           |
-| **Lena: 3 phase values** | **Lena: 2 phase values** |
-|![](lena3.png)            | ![](lena2.png)           |
+|![](testimg8.png)         | ![](testimg4.png)        |
+| **Mandrill: 3 phase values** | **Mandrill: 2 phase values** |
+|![](testimg3.png)         | ![](testimg2.png)        |
 
 
 ## Test Images
@@ -346,38 +344,38 @@ L. Moisan, "Periodic plus Smooth Image Decomposition", Journal of
 Mathematical Imaging and Vision, vol 39:2, pp. 161-179, 2011.
 
 ```@setup perfft
-using TestImages
-img = testimage("lena_gray_512")
+using TestImages, Images
+img = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512]
 ```
 
 ```@example perfft
 using ImagePhaseCongruency, TestImages, Images, FFTW #,PyPlot
 
-img = Float64.(testimage("lena_gray_512"))
+img = Float64.(Gray.(testimage("lighthouse")))[1:512, 1:512]
 
-IMG = fft(img)               # 'Standard' fft of Lena
-(P, S, p, s) = perfft2(img)  # 'Periodic' fft of Lena
+IMG = fft(img)               # 'Standard' fft
+(P, S, p, s) = perfft2(img)  # 'Periodic' fft
 
 #set_cmap(PyPlot.ColorMap("gray"))
 
-#imshow(img)  # Lena  (img = p + s)
-#imshow(p)    # The periodic component of Lena
-save("lena_p.png", imadjustintensity(p)) # hide
-#imshow(s)    # The smooth component of Lena
-save("lena_s.png", imadjustintensity(s)) # hide
+#imshow(img)  # (img = p + s)
+#imshow(p)    # The periodic component
+save("testimg_p.png", imadjustintensity(p)) # hide
+#imshow(s)    # The smooth component
+save("testimg_s.png", imadjustintensity(s)) # hide
 
 #imshow(log.(abs.(fftshift(IMG)))) # Note the vertical and horizontal cross in
                                   # the spectrum induced by the non-periodic edges.
-save("lena_fft.png", imadjustintensity(log.(abs.(fftshift(IMG))))) # hide
+save("testimg_fft.png", imadjustintensity(log.(abs.(fftshift(IMG))))) # hide
 #imshow(log.(abs.(fftshift(P))))   # Note the clean spectrum because p is periodic.
-save("lena_fft_p.png", imadjustintensity(log.(abs.(fftshift(P))))) # hide
+save("testimg_fft_p.png", imadjustintensity(log.(abs.(fftshift(P))))) # hide
 
 ```
 
-|  Lena                        |                            |
+|  Test image                  |                            |
 |------------------------------|----------------------------|
-| ![](lena.png)                |                            |
-| **Lena: periodic component** | **Lena: smooth component** |
-| ![](lena_p.png)              | ![](lena_s.png)            |
+| ![](testimg.png)             |                            |
+| **Periodic component**       | **Smooth component**       |
+| ![](testimg_p.png)           | ![](testimg_s.png)         |
 | **Spectrum of periodic component**| **Spectrum of standard FFT** |
-| ![](lena_fft_p.png)          | ![](lena_fft.png)          |
+| ![](testimg_fft_p.png)       | ![](testimg_fft.png)          |
