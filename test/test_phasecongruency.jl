@@ -8,7 +8,7 @@ Set the variable 'disp' to true to display the processed images
 
 disp = false
 
-using Test, ImagePhaseCongruency, TestImages
+using Test, Images, ImagePhaseCongruency, TestImages
 
 if disp
     using PyPlot
@@ -16,8 +16,9 @@ end
 
 println("Testing phase congruency functions...")
 
-img = testimage("lena_gray")
-img = Float64.(img)
+#img = testimage("lena_gray")
+img = Float64.(Gray.(testimage("lighthouse")))
+
 disp ? imshow(img, ColorMap("gray")) : nothing
 
 println("Phase preserving dynamic range compresion")

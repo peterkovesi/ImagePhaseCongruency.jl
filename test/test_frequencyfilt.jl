@@ -9,7 +9,7 @@ Set disp = true to display images for visual verification
 
 disp = false
 
-using ImagePhaseCongruency, Test, TestImages, AbstractFFTs
+using ImagePhaseCongruency, Images, Test, TestImages, AbstractFFTs
 
 if disp
     using PyPlot
@@ -26,7 +26,7 @@ end
 
 if disp; PyPlot.set_cmap(PyPlot.ColorMap("gray")); end
 
-lena = Float64.(testimage("lena_gray"))
+testimg = Float64.(Gray.(testimage("lighthouse")))
 
 rows = 101
 cols = 200
@@ -86,10 +86,10 @@ thetaSigma = .4
 flter = gaussianangularfilter(angl, thetaSigma, sintheta, costheta)
 if disp; imshow(flter); title("gaussianangularfilter"); mypause(); end
 
-(P, S, p, s) = perfft2(lena)
-if disp; imshow(lena); title("lena"); mypause(); end
-if disp; imshow(p); title("periodic lena"); mypause(); end
-if disp; imshow(s); title("lena - periodic lena"); mypause(); end
+(P, S, p, s) = perfft2(testimg)
+if disp; imshow(testimg); title("testimg"); mypause(); end
+if disp; imshow(p); title("periodic testimg"); mypause(); end
+if disp; imshow(s); title("testimg - periodic testimg"); mypause(); end
 
 s1 = geoseries(0.5, 2, 4)
 s2 = geoseries((0.5, 4), 4)

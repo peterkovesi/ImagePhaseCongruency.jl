@@ -6,3 +6,4 @@
 *.DS_Store
 docs/build/
 docs/site/
+Manifest.toml
