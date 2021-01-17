@@ -15,7 +15,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
 
 [compat]
-AbstractFFTs = "0.3, 0.4, 0.5"
+AbstractFFTs = "0.3, 0.4, 0.5, 1.0"
 Documenter = "0.24, 0.25, 0.26"
 FFTW = "1"
 FileIO = "1"
