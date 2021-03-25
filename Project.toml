@@ -1,7 +1,7 @@
 name = "ImagePhaseCongruency"
 uuid = "10e51d30-6ba1-539a-b97e-c69c597142c4"
 authors = ["Peter Kovesi <peter.kovesi@gmail.com>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
