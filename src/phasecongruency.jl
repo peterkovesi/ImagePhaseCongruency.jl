@@ -33,11 +33,12 @@ August 2015   Original conversion from MATLAB to Julia
 November 2017  Julia 0.6
 October  2018  Julia 0.7/1.0
 ---------------------------------------------------------------------=#
-using Images, FFTW, Statistics
+using FFTW, Statistics
+using ImageCore
 
 export phasecongmono, phasesymmono, ppdrc
 export highpassmonogenic, bandpassmonogenic
-export gaborconvolve, monofilt 
+export gaborconvolve, monofilt
 export phasecong3, phasesym, ppdenoise
 
 #--------------------------------------------------------------------
@@ -645,12 +646,10 @@ http://mathworld.wolfram.com/RayleighDistribution.html
 http://en.wikipedia.org/wiki/Rayleigh_distribution
 ```
 """
-function rayleighmode(data, nbins::Integer= 50)
-    
-    edges, count = Images.imhist(data, nbins, 0, maximum(data))
-    ind = indmax(count)   # Find the index of maximum in histogram 
-
-    return rmode = (edges[ind]+edges[ind+1])/2
+function rayleighmode(X, nbins::Integer= 50)
+    edges, counts = build_histogram(X, nbins=nbins)
+    ind = argmax(counts)
+    return (edges[ind]+edges[ind+1])/2
 end
 
 #-------------------------------------------------------------------------

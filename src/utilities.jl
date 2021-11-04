@@ -18,8 +18,7 @@ PK August 2015
    October 2018 Julia 0.7/1.0
 
 ---------------------------------------------------------------------=#
-import Images
-
+import ImageMorphology: label_components, component_indices
 export replacenan, fillnan
 export hysthresh, imgnormalize
 
@@ -126,8 +125,8 @@ function hysthresh(img::AbstractArray{T0,2}, T1::Real, T2::Real) where T0 <: Rea
     
     # Form 8-connected components of pixels with a value above the
     # lower threshold and get the indices of pixels in each component.
-    label = Images.label_components(img .>= T2, trues(3,3))
-    pix = Images.component_indices(label)
+    label = label_components(img .>= T2, trues(3,3))
+    pix = component_indices(label)
 
     # For each list of pixels in pix test to see if there are any
     # image values above T1.  If so, set these pixels in the output
