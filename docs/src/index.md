@@ -1,6 +1,22 @@
 
 # ImagePhaseCongruency
 
+```@setup genimages
+using TestImages, Images, ImageContrastAdjustment
+using Random
+Random.seed!(1234)
+
+save("testimg.png", restrict(testimage("mandril_gray")))
+save("blobs.png", Gray.(testimage("blobs")))
+
+img = centered(Gray.(restrict(testimage("lighthouse"))))[-127:128, -127:128]
+img .+= 0.25 * randn(size(img))
+save("testimgplusnoise.png", clamp01!(img))
+
+img = testimage("m51")
+img = adjust_histogram(centered(img)[-128:127, -128:127], LinearStretching())
+save("m51.png", img)
+```
 
 This package provides a collection of image processing functions that exploit
 the importance of phase information in our perception of images. The functions
@@ -20,7 +36,7 @@ form two main groups:
 
 |.  |   |
 |---|---|
-|![](testimg.png)              |![](testimg_bw.png)           |
+|![](testimg.png)              |![](examples/covers/phasecongmono.png)           |
 
 Rather than assume a feature is a point of maximal intensity gradient, the Local
 Energy Model postulates that features are perceived at points in an image where
@@ -39,13 +55,13 @@ values to be used over large classes of images.
 
 * [`phasecongmono()`](@ref) Phase congruency of an image using monogenic filters.
 * [`phasecong3()`](@ref) Computes edge and corner phase congruency in an image via log-Gabor filters.
-* [Example](@ref PhaseCongruencyExample) of using `phasecongmono()` and `phasecong3()`.
+* [Example](@ref Phase-congruency) of using `phasecongmono()` and `phasecong3()`.
 
 ## Phase symmetry
 
 |.  |   |
 |---|---|
-|![](blobs.png) |![](blobs_sym-1.png) |
+|![](blobs.png) |![](examples/covers/phasesymmetry.gif) |
 
 A point of local symmetry in an image corresponds to a point where the local
 frequency components are at either the minimum or maximum points in their
@@ -55,14 +71,14 @@ quantity.
 
 * [`phasesym()`](@ref) Compute phase symmetry on an image via log-Gabor filters.
 * [`phasesymmono()`](@ref) Phase symmetry of an image using monogenic filters.
-* [Example](@ref PhaseSymmetryExample) of using `phasesymmono()`.
+* [Example](@ref demo_phasesymmono) of using `phasesymmono()`.
 
 
 ## Phase preserving denoising
 
 |.  |   |
 |---|---|
-| ![](testimgplusnoise.png) | ![](testimgdenoised.png) |
+| ![](testimgplusnoise.png) | ![](examples/covers/ppdenoise.png) |
 
 This is a wavelet denoising scheme that uses non-orthogonal, complex valued,
 log-Gabor wavelets, rather than the more usual orthogonal or bi-orthogonal
@@ -72,14 +88,14 @@ corrupted. It is also allows threshold values can be determined automatically
 from the statistics of the wavelet responses to the image.
 
 * [`ppdenoise()`](@ref) Phase preserving wavelet image denoising.
-* [Example](@ref ppdenoiseExample) of using `ppdenoise()`.
+* [Example](@ref demo_ppdenoise) of using `ppdenoise()`.
 
 
 ## Phase preserving dynamic range compression
 
 |.  |   |
 |---|---|
-|![](m51.png) |![](m51ppdrc200.png)|
+|![](m51.png) |![](examples/covers/ppdrc.png)|
 
 A common method for displaying images with a high dynamic range is to use some
 variant of histogram equalization.  The problem with histogram equalization is
@@ -92,7 +108,7 @@ information is preserved and the contrast amplification of structures in the
 signal is purely a function of their amplitude.
 
 * [`ppdrc()`](@ref) Phase Preserving Dynamic Range Compression.
-* [Example](@ref ppdrcExample) of using `ppdrc()`.
+* [Example](@ref demo_ppdrc) of using `ppdrc()`.
 
 
 ## Supporting filtering functions
