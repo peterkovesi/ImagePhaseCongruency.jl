@@ -8,7 +8,7 @@ Set the variable 'disp' to true to display the processed images
 
 disp = false
 
-using Test, Images, ImagePhaseCongruency, TestImages
+using Test, ImageCore, ImagePhaseCongruency, TestImages
 
 if disp
     using PyPlot
