@@ -9,7 +9,7 @@ Set disp = true to display images for visual verification
 
 disp = false
 
-using ImagePhaseCongruency, Images, Test, TestImages, AbstractFFTs
+using ImagePhaseCongruency, ImageCore, Test, TestImages, FFTW
 
 if disp
     using PyPlot

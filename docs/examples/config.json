@@ -1,0 +1,11 @@
+{
+    "theme": "grid",
+    "order": [
+        "phase_congruency",
+        "test_images",
+        "misc"
+    ],
+    "properties": {
+        "notebook": "false"
+    }
+}

@@ -9,7 +9,7 @@ Set 'disp' = true to display the images
 
 disp = false
 
-using ImagePhaseCongruency, Images, TestImages
+using ImagePhaseCongruency, ImageCore, TestImages
 
 if disp
     using PyPlot
