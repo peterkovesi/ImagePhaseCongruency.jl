@@ -18,7 +18,7 @@ PK August 2015
    October 2018 Julia 0.7/1.0
 
 ---------------------------------------------------------------------=#
-import ImageMorphology: label_components, component_indices
+import ImageMorphology: label_components, component_indices, strel_box
 export replacenan, fillnan
 export hysthresh, imgnormalize
 
@@ -116,7 +116,6 @@ threshold T2 are also marked as edges. Eight connectivity is used.
 
 """
 function hysthresh(img::AbstractArray{T0,2}, T1::Real, T2::Real) where T0 <: Real
-
     bw = falses(size(img))
 
     if T1 < T2    # Swap T1 and T2
@@ -125,13 +124,14 @@ function hysthresh(img::AbstractArray{T0,2}, T1::Real, T2::Real) where T0 <: Rea
 
     # Form 8-connected components of pixels with a value above the
     # lower threshold and get the indices of pixels in each component.
-    label = label_components(img .>= T2, trues(3,3))
+    label = label_components(img .>= T2, strel_box((3, 3)))
     pix = component_indices(label)
+    num_non_background_labels = length(pix) - 1
 
     # For each list of pixels in pix test to see if there are any
     # image values above T1.  If so, set these pixels in the output
     # image.  Note we ignore pix[1] as these are the background pixels.
-    for n = 2:length(pix)
+    for n = 1:num_non_background_labels
         for i in eachindex(pix[n])
             if img[pix[n][i]] >= T1
                 bw[pix[n]] .= true
