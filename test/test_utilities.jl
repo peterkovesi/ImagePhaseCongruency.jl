@@ -41,5 +41,11 @@ img[15:20,15] .= 10
 img[15,15] = 20
 
 bw = hysthresh(img, 8, 20)
+
+expected_img = falses(30,30)
+expected_img[15:20, 15] .= true
+
+@test all(bw .== expected_img)
+
 if disp; imshow(img); title("Unthresholded image"); mypause(); end
 if disp; imshow(bw); title("Thresholded image"); mypause(); end
