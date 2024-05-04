@@ -7,4 +7,3 @@ img = circsine(offset = pi/4, ampexponent = -1.5)
 adjust_histogram(Gray.(img), LinearStretching())
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
-

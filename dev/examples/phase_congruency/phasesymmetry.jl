@@ -12,4 +12,3 @@ phase_dark, = phasesymmono(img; nscale=5, polarity=-1)
 mosaic(img, phase_bright, phase_dark; nrow=1)
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
-

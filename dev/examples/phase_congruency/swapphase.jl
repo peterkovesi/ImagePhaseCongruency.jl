@@ -10,4 +10,3 @@ img2 = restrict(Float64.(testimage("mandril_gray")))[1:256, 1:256]
 mosaic(Gray.(img1), newimg1, img2, newimg2; nrow=2)
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
-
